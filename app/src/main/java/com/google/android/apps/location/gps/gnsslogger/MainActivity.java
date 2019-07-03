@@ -54,6 +54,8 @@ import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 import java.util.Locale;
 
+import okhttp3.WebSocket;
+
 /** The activity for the application. */
 public class MainActivity extends AppCompatActivity
     implements OnConnectionFailedListener, ConnectionCallbacks, GroundTruthModeSwitcher {
@@ -69,6 +71,11 @@ public class MainActivity extends AppCompatActivity
   private static final int FRAGMENT_INDEX_AGNSS = 4;
   private static final int FRAGMENT_INDEX_PLOT = 5;
   private static final String TAG = "MainActivity";
+
+  public static WebSocket _ws;
+  public static SocketManager sm;
+  public final Object locker = new Object();
+  public boolean Connected;
 
   private GnssContainer mGnssContainer;
   private UiLogger mUiLogger;
@@ -128,6 +135,50 @@ public class MainActivity extends AppCompatActivity
     super.onDestroy();
   }
 
+  public void Connect()
+  {
+    sm = new SocketManager();
+    _ws = sm.Connect();
+    //SendGUIDandLobbyInfo(LobbyName,Pass,Status);
+
+    /*try {
+      for (int i =0; i< 50; i++) {
+        if (!Connected) {
+          Thread.sleep(100);
+        }
+        else
+          break;
+      }
+    } catch (InterruptedException e){}
+
+    Thread thread = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          Thread.sleep(5000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+        while (true) {
+          synchronized (locker) {
+            Connected = false;
+          }
+          try {
+            Thread.sleep(10000);
+          } catch (InterruptedException e) {
+          }
+
+          synchronized (locker) {
+            if (!Connected) {
+              break;
+            }
+          }
+        }
+      }
+    });
+    thread.start();*/
+  }
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     SharedPreferences sharedPreferences = PreferenceManager.
@@ -138,7 +189,9 @@ public class MainActivity extends AppCompatActivity
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     buildGoogleApiClient();
+    Connect();
     requestPermissionAndSetupFragments(this);
+
   }
 
   protected PendingIntent createActivityDetectionPendingIntent() {

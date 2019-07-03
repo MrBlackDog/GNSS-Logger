@@ -36,6 +36,9 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.WebSocket;
+
+import static com.google.android.apps.location.gps.gnsslogger.MainActivity._ws;
 
 /**
  * A class representing a UI logger for the application. Its responsibility is show information in
@@ -44,6 +47,24 @@ import okhttp3.Response;
 public class UiLogger implements GnssListener {
 
   private static final int USED_COLOR = Color.rgb(0x4a, 0x5f, 0x70);
+
+
+
+
+
+  /*public void SendMessage(String message)
+  {
+    String[] Mass = message.split(":");
+    String Code = Mass[0];
+    switch (Code) {
+      case "Measurements":
+        _ws.send(message);
+        break;
+      case "GNSSClock":
+        _ws.send(message);
+        break;
+    }
+  }*/
 
   public UiLogger() {}
 
@@ -168,7 +189,15 @@ public class UiLogger implements GnssListener {
             format,
             "HardwareClockDiscontinuityCount",
             gnssClock.getHardwareClockDiscontinuityCount()));
-
+    MainActivity._ws.send("GNSSClock:" + gnssClock.getLeapSecond() + " " +
+                                gnssClock.getTimeNanos() + " "+
+                                gnssClock.getTimeUncertaintyNanos() + " " +
+                                gnssClock.getFullBiasNanos() + " " +
+                                gnssClock.getBiasNanos() + " " +
+                    numberFormat.format(gnssClock.getBiasUncertaintyNanos()) + " " +
+                    numberFormat.format(gnssClock.getDriftNanosPerSecond()) + " " +
+                    numberFormat.format(gnssClock.getDriftUncertaintyNanosPerSecond())
+            );
     return builder.toString();
   }
 
@@ -256,7 +285,28 @@ public class UiLogger implements GnssListener {
         builder.append(String.format(format, "CarrierFreqHz", measurement.getCarrierFrequencyHz()));
       }
     }
-    SendCoords( measurement.getSvid(),measurement.getState(),measurement.getReceivedSvTimeNanos());
+    MainActivity._ws.send("Measurements:"+
+            measurement.getSvid() + " " +
+            measurement.getConstellationType() + " " +
+            measurement.getTimeOffsetNanos() + " " +
+            measurement.getState() + " " +
+            measurement.getReceivedSvTimeNanos() + " " +
+            measurement.getReceivedSvTimeUncertaintyNanos() + " " +
+            numberFormat.format(measurement.getCn0DbHz()) + " " +
+            numberFormat.format(measurement.getPseudorangeRateMetersPerSecond()) + " " +
+            numberFormat.format(measurement.getPseudorangeRateUncertaintyMetersPerSecond()) + " " +
+            measurement.getAccumulatedDeltaRangeState() + " " +
+            numberFormat.format(measurement.getAccumulatedDeltaRangeMeters()) + " " +
+            numberFormat1.format(measurement.getAccumulatedDeltaRangeUncertaintyMeters()) + " " +
+            measurement.getCarrierFrequencyHz() + " " +
+            measurement.getCarrierCycles() + " " +
+            measurement.getCarrierPhase() + " " +
+            measurement.getCarrierPhaseUncertainty() + " " +
+            measurement.getMultipathIndicator() + " " +
+            measurement.getSnrInDb() + " " +
+            //measurement.getAutomaticGainControlLevelDb() + " " +
+            measurement.getCarrierFrequencyHz() + " ");
+    //SendCoords( measurement.getSvid(),measurement.getState(),measurement.getReceivedSvTimeNanos());
     return builder.toString();
   }
 
