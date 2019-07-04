@@ -18,7 +18,7 @@ public class SocketManager {
 
         WebSocketGolos wsc = new WebSocketGolos();
         WebSocket ws = client.newWebSocket(request, wsc);
-
+        ws.send("State:" + "Client");
         return ws;
     }
 }
