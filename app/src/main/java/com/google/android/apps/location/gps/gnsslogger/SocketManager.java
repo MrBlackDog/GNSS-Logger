@@ -1,5 +1,7 @@
 package com.google.android.apps.location.gps.gnsslogger;
 
+import android.os.Build;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.WebSocket;
@@ -18,7 +20,7 @@ public class SocketManager {
 
         WebSocketGolos wsc = new WebSocketGolos();
         WebSocket ws = client.newWebSocket(request, wsc);
-        ws.send("State:" + "Client");
+        ws.send("State:" + "Client:"  + Build.MANUFACTURER +" " +  Build.MODEL);
         return ws;
     }
 }
