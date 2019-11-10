@@ -3,11 +3,11 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ArTack-Gnss-Logger.iml" filepath="$PROJECT_DIR$/ArTack-Gnss-Logger.iml" group="Gnss-Logger" />
-      <module fileurl="file://$PROJECT_DIR$/Gnss-Logger.iml" filepath="$PROJECT_DIR$/Gnss-Logger.iml" group="Gnss-Logger" />
       <module fileurl="file://$PROJECT_DIR$/app/Gnss-Logger-app.iml" filepath="$PROJECT_DIR$/app/Gnss-Logger-app.iml" group="Gnss-Logger/app" />
       <module fileurl="file://$PROJECT_DIR$/pseudorange/Gnss-Logger-pseudorange.iml" filepath="$PROJECT_DIR$/pseudorange/Gnss-Logger-pseudorange.iml" group="Gnss-Logger/pseudorange" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="Gnss-Logger/app" />
-      <module fileurl="file://$PROJECT_DIR$/pseudorange/pseudorange.iml" filepath="$PROJECT_DIR$/pseudorange/pseudorange.iml" group="Gnss-Logger/pseudorange" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="gnss-logger/app" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gnss-logger.iml" filepath="$PROJECT_DIR$/.idea/modules/gnss-logger.iml" group="gnss-logger" />
+      <module fileurl="file://$PROJECT_DIR$/pseudorange/pseudorange.iml" filepath="$PROJECT_DIR$/pseudorange/pseudorange.iml" group="gnss-logger/pseudorange" />
     </modules>
   </component>
 </project>
