@@ -127,11 +127,13 @@ public class MainActivity extends AppCompatActivity
   protected void onStop() {
     super.onStop();
     unbindService(mConnection);
+
   }
 
   @Override
   protected void onDestroy(){
     mGnssContainer.unregisterAll();
+    _ws.send("Close");
     super.onDestroy();
   }
 

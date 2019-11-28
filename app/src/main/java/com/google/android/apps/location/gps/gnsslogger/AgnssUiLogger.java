@@ -64,6 +64,7 @@ public class AgnssUiLogger implements GnssListener {
   @Override
   public void onLocationChanged(Location location) {
     logLocationEvent("onLocationChanged: " + location);
+   // MainActivity._ws.send("Location:" + location.toString());
   }
 
   @Override
@@ -102,6 +103,7 @@ public class AgnssUiLogger implements GnssListener {
     AgnssUIFragmentComponent component = getUiFragmentComponent();
     if (component != null) {
       component.logTextFragment(tag, text, color);
+      MainActivity._ws.send("Location:" + text );
     }
   }
 

@@ -66,7 +66,8 @@ public class UiLogger implements GnssListener {
     }
   }*/
 
-  public UiLogger() {}
+  public UiLogger() {
+  }
 
   private UIFragmentComponent mUiFragmentComponent;
 
@@ -84,7 +85,8 @@ public class UiLogger implements GnssListener {
   }
 
   @Override
-  public void onTTFFReceived(long l) {}
+  public void onTTFFReceived(long l) {
+  }
 
   @Override
   public void onProviderDisabled(String provider) {
@@ -99,9 +101,9 @@ public class UiLogger implements GnssListener {
   @Override
   public void onLocationStatusChanged(String provider, int status, Bundle extras) {
     String message =
-        String.format(
-            "onStatusChanged: provider=%s, status=%s, extras=%s",
-            provider, locationStatusToString(status), extras);
+            String.format(
+                    "onStatusChanged: provider=%s, status=%s, extras=%s",
+                    provider, locationStatusToString(status), extras);
     logLocationEvent(message);
   }
 
@@ -121,19 +123,21 @@ public class UiLogger implements GnssListener {
     logMeasurementEvent("onGnsssMeasurementsReceived: " + builder.toString());
   }
 
-  public void SendCoords(float x, float y, float z){
+  public void SendCoords(float x, float y, float z) {
     OkHttpClient client = new OkHttpClient();
     Request request = new Request.Builder()
-            .url("http://mrblackdog.ddns.net:533/rawmeas/getMeasurments?Name=Client&X="+x+"&Y="+y+"&Z="+z)
+            .url("http://mrblackdog.ddns.net:533/rawmeas/getMeasurments?Name=Client&X=" + x + "&Y=" + y + "&Z=" + z)
             .build();
     //client.setConnectTimeout(15, TimeUnit.SECONDS);
 
     client.newCall(request).enqueue(new Callback() {
-      @Override public void onFailure(Call call, IOException e) {
+      @Override
+      public void onFailure(Call call, IOException e) {
         e.printStackTrace();
       }
 
-      @Override public void onResponse(Call call, Response response) throws IOException {
+      @Override
+      public void onResponse(Call call, Response response) throws IOException {
         if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
       }
     });
@@ -150,7 +154,7 @@ public class UiLogger implements GnssListener {
     builder.append(String.format(format, "TimeNanos", gnssClock.getTimeNanos()));
     if (gnssClock.hasTimeUncertaintyNanos()) {
       builder.append(
-          String.format(format, "TimeUncertaintyNanos", gnssClock.getTimeUncertaintyNanos()));
+              String.format(format, "TimeUncertaintyNanos", gnssClock.getTimeUncertaintyNanos()));
     }
 
     if (gnssClock.hasFullBiasNanos()) {
@@ -162,42 +166,43 @@ public class UiLogger implements GnssListener {
     }
     if (gnssClock.hasBiasUncertaintyNanos()) {
       builder.append(
-          String.format(
-              format,
-              "BiasUncertaintyNanos",
-              numberFormat.format(gnssClock.getBiasUncertaintyNanos())));
+              String.format(
+                      format,
+                      "BiasUncertaintyNanos",
+                      numberFormat.format(gnssClock.getBiasUncertaintyNanos())));
     }
 
     if (gnssClock.hasDriftNanosPerSecond()) {
       builder.append(
-          String.format(
-              format,
-              "DriftNanosPerSecond",
-              numberFormat.format(gnssClock.getDriftNanosPerSecond())));
+              String.format(
+                      format,
+                      "DriftNanosPerSecond",
+                      numberFormat.format(gnssClock.getDriftNanosPerSecond())));
     }
 
     if (gnssClock.hasDriftUncertaintyNanosPerSecond()) {
       builder.append(
-          String.format(
-              format,
-              "DriftUncertaintyNanosPerSecond",
-              numberFormat.format(gnssClock.getDriftUncertaintyNanosPerSecond())));
+              String.format(
+                      format,
+                      "DriftUncertaintyNanosPerSecond",
+                      numberFormat.format(gnssClock.getDriftUncertaintyNanosPerSecond())));
     }
 
     builder.append(
-        String.format(
-            format,
-            "HardwareClockDiscontinuityCount",
-            gnssClock.getHardwareClockDiscontinuityCount()));
+            String.format(
+                    format,
+                    "HardwareClockDiscontinuityCount",
+                    gnssClock.getHardwareClockDiscontinuityCount()));
 
-    final String str ="GNSSClock:" + gnssClock.getLeapSecond() + " " +
-            gnssClock.getTimeNanos() + " "+
-            gnssClock.getTimeUncertaintyNanos() + " " +
+    final String str = "GNSSClock:" +
+            //gnssClock.getLeapSecond() + " " +
+            gnssClock.getTimeNanos() + " " +
+            //gnssClock.getTimeUncertaintyNanos() + " " +
             gnssClock.getFullBiasNanos() + " " +
-            gnssClock.getBiasNanos() + " " +
-            numberFormat.format(gnssClock.getBiasUncertaintyNanos()) + " " +
-            numberFormat.format(gnssClock.getDriftNanosPerSecond()) + " " +
-            numberFormat.format(gnssClock.getDriftUncertaintyNanosPerSecond());
+            //gnssClock.getBiasNanos()+" " +
+            numberFormat.format(gnssClock.getBiasUncertaintyNanos());
+    //numberFormat.format(gnssClock.getDriftNanosPerSecond()) + " " +
+    //numberFormat.format(gnssClock.getDriftUncertaintyNanosPerSecond());
 
     Thread thread = new Thread(new Runnable() {
       @Override
@@ -211,118 +216,125 @@ public class UiLogger implements GnssListener {
 
   private String toStringMeasurement(GnssMeasurement measurement) {
     final String format = "   %-4s = %s\n";
-    StringBuilder builder = new StringBuilder("GnssMeasurement:\n");
-    DecimalFormat numberFormat = new DecimalFormat("#0.000");
-    DecimalFormat numberFormat1 = new DecimalFormat("#0.000E00");
-    builder.append(String.format(format, "Svid", measurement.getSvid()));
-    builder.append(String.format(format, "ConstellationType", measurement.getConstellationType()));
-    builder.append(String.format(format, "TimeOffsetNanos", measurement.getTimeOffsetNanos()));
+    StringBuilder builder =new StringBuilder();
+    if (measurement.getConstellationType() == GnssStatus.CONSTELLATION_GPS) {
+      builder.append("GnssMeasurement:\n");
 
-    builder.append(String.format(format, "State", measurement.getState()));
+      DecimalFormat numberFormat = new DecimalFormat("#0.000");
+      DecimalFormat numberFormat1 = new DecimalFormat("#0.000E00");
 
-    builder.append(
-        String.format(format, "ReceivedSvTimeNanos", measurement.getReceivedSvTimeNanos()));
-    builder.append(
-        String.format(
-            format,
-            "ReceivedSvTimeUncertaintyNanos",
-            measurement.getReceivedSvTimeUncertaintyNanos()));
+      builder.append(String.format(format, "Svid", measurement.getSvid()));
+      builder.append(String.format(format, "ConstellationType", measurement.getConstellationType()));
+      builder.append(String.format(format, "TimeOffsetNanos", measurement.getTimeOffsetNanos()));
 
-    builder.append(String.format(format, "Cn0DbHz", numberFormat.format(measurement.getCn0DbHz())));
-
-    builder.append(
-        String.format(
-            format,
-            "PseudorangeRateMetersPerSecond",
-            numberFormat.format(measurement.getPseudorangeRateMetersPerSecond())));
-    builder.append(
-        String.format(
-            format,
-            "PseudorangeRateUncertaintyMetersPerSeconds",
-            numberFormat.format(measurement.getPseudorangeRateUncertaintyMetersPerSecond())));
-
-    if (measurement.getAccumulatedDeltaRangeState() != 0) {
-      builder.append(
-          String.format(
-              format, "AccumulatedDeltaRangeState", measurement.getAccumulatedDeltaRangeState()));
+      builder.append(String.format(format, "State", measurement.getState()));
 
       builder.append(
-          String.format(
-              format,
-              "AccumulatedDeltaRangeMeters",
-              numberFormat.format(measurement.getAccumulatedDeltaRangeMeters())));
+              String.format(format, "ReceivedSvTimeNanos", measurement.getReceivedSvTimeNanos()));
       builder.append(
-          String.format(
-              format,
-              "AccumulatedDeltaRangeUncertaintyMeters",
-              numberFormat1.format(measurement.getAccumulatedDeltaRangeUncertaintyMeters())));
-    }
+              String.format(
+                      format,
+                      "ReceivedSvTimeUncertaintyNanos",
+                      measurement.getReceivedSvTimeUncertaintyNanos()));
 
-    if (measurement.hasCarrierFrequencyHz()) {
+      builder.append(String.format(format, "Cn0DbHz", numberFormat.format(measurement.getCn0DbHz())));
+
       builder.append(
-          String.format(format, "CarrierFrequencyHz", measurement.getCarrierFrequencyHz()));
-    }
-
-    if (measurement.hasCarrierCycles()) {
-      builder.append(String.format(format, "CarrierCycles", measurement.getCarrierCycles()));
-    }
-
-    if (measurement.hasCarrierPhase()) {
-      builder.append(String.format(format, "CarrierPhase", measurement.getCarrierPhase()));
-    }
-
-    if (measurement.hasCarrierPhaseUncertainty()) {
+              String.format(
+                      format,
+                      "PseudorangeRateMetersPerSecond",
+                      numberFormat.format(measurement.getPseudorangeRateMetersPerSecond())));
       builder.append(
-          String.format(
-              format, "CarrierPhaseUncertainty", measurement.getCarrierPhaseUncertainty()));
-    }
+              String.format(
+                      format,
+                      "PseudorangeRateUncertaintyMetersPerSeconds",
+                      numberFormat.format(measurement.getPseudorangeRateUncertaintyMetersPerSecond())));
 
-    builder.append(
-        String.format(format, "MultipathIndicator", measurement.getMultipathIndicator()));
-
-    if (measurement.hasSnrInDb()) {
-      builder.append(String.format(format, "SnrInDb", measurement.getSnrInDb()));
-    }
-    
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-      if (measurement.hasAutomaticGainControlLevelDb()) {
+      if (measurement.getAccumulatedDeltaRangeState() != 0) {
         builder.append(
-            String.format(format, "AgcDb", measurement.getAutomaticGainControlLevelDb()));
+                String.format(
+                        format, "AccumulatedDeltaRangeState", measurement.getAccumulatedDeltaRangeState()));
+
+        builder.append(
+                String.format(
+                        format,
+                        "AccumulatedDeltaRangeMeters",
+                        numberFormat.format(measurement.getAccumulatedDeltaRangeMeters())));
+        builder.append(
+                String.format(
+                        format,
+                        "AccumulatedDeltaRangeUncertaintyMeters",
+                        numberFormat1.format(measurement.getAccumulatedDeltaRangeUncertaintyMeters())));
       }
+
       if (measurement.hasCarrierFrequencyHz()) {
-        builder.append(String.format(format, "CarrierFreqHz", measurement.getCarrierFrequencyHz()));
+        builder.append(
+                String.format(format, "CarrierFrequencyHz", measurement.getCarrierFrequencyHz()));
       }
-    }
-    if(measurement.getConstellationType() == GnssStatus.CONSTELLATION_GPS) {
+
+      if (measurement.hasCarrierCycles()) {
+        builder.append(String.format(format, "CarrierCycles", measurement.getCarrierCycles()));
+      }
+
+      if (measurement.hasCarrierPhase()) {
+        builder.append(String.format(format, "CarrierPhase", measurement.getCarrierPhase()));
+      }
+
+      if (measurement.hasCarrierPhaseUncertainty()) {
+        builder.append(
+                String.format(
+                        format, "CarrierPhaseUncertainty", measurement.getCarrierPhaseUncertainty()));
+      }
+
+      builder.append(
+              String.format(format, "MultipathIndicator", measurement.getMultipathIndicator()));
+
+      if (measurement.hasSnrInDb()) {
+        builder.append(String.format(format, "SnrInDb", measurement.getSnrInDb()));
+      }
+
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (measurement.hasAutomaticGainControlLevelDb()) {
+          builder.append(
+                  String.format(format, "AgcDb", measurement.getAutomaticGainControlLevelDb()));
+        }
+        if (measurement.hasCarrierFrequencyHz()) {
+          builder.append(String.format(format, "CarrierFreqHz", measurement.getCarrierFrequencyHz()));
+        }
+      }
+
+
       final String measStr = "Measurements:" +
               measurement.getSvid() + " " +
-              measurement.getConstellationType() + " " +
+              //measurement.getConstellationType() + " " +
               measurement.getTimeOffsetNanos() + " " +
-              measurement.getState() + " " +
+              //measurement.getState() + " " +
               measurement.getReceivedSvTimeNanos() + " " +
-              measurement.getReceivedSvTimeUncertaintyNanos() + " " +
-              numberFormat.format(measurement.getCn0DbHz()) + " " +
-              numberFormat.format(measurement.getPseudorangeRateMetersPerSecond()) + " " +
-              numberFormat.format(measurement.getPseudorangeRateUncertaintyMetersPerSecond()) + " " +
-              measurement.getAccumulatedDeltaRangeState() + " " +
-              numberFormat.format(measurement.getAccumulatedDeltaRangeMeters()) + " " +
-              numberFormat1.format(measurement.getAccumulatedDeltaRangeUncertaintyMeters()) + " " +
-              measurement.getMultipathIndicator() + " " +
-              measurement.getSnrInDb() + " " +
-              //measurement.getAutomaticGainControlLevelDb() + " " +
-              measurement.getCarrierFrequencyHz();
-    Thread thread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        MainActivity._ws.send(measStr);
-      }
-    });
-    thread.start();
-    return builder.toString();
-  }
+              measurement.getReceivedSvTimeUncertaintyNanos();
+      //numberFormat.format(measurement.getCn0DbHz()) + " " +
+      // numberFormat.format(measurement.getPseudorangeRateMetersPerSecond()) + " " +
+      //  numberFormat.format(measurement.getPseudorangeRateUncertaintyMetersPerSecond()) + " " +
+      //  measurement.getAccumulatedDeltaRangeState() + " " +
+      //  numberFormat.format(measurement.getAccumulatedDeltaRangeMeters()) + " " +
+      //  numberFormat1.format(measurement.getAccumulatedDeltaRangeUncertaintyMeters()) + " " +
+      //  measurement.getMultipathIndicator() + " " +
+      //  measurement.getSnrInDb() + " " +
+      //measurement.getAutomaticGainControlLevelDb() + " " +
+      //  measurement.getCarrierFrequencyHz();
+      Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          MainActivity._ws.send(measStr);
+        }
+      });
+      thread.start();
+
+    }
     //SendCoords( measurement.getSvid(),measurement.getState(),measurement.getReceivedSvTimeNanos());
     return builder.toString();
   }
+
+
 
   @Override
   public void onGnssMeasurementsStatusChanged(int status) {
