@@ -18,6 +18,9 @@ package com.google.android.apps.location.gps.gnsslogger;
 
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.location.GnssClock;
 import android.location.GnssMeasurement;
 import android.location.GnssMeasurementsEvent;
@@ -49,7 +52,7 @@ import java.util.Locale;
 /**
  * A GNSS logger to store information to a file.
  */
-public class FileLogger implements GnssListener {
+public class FileLogger implements GnssListener, SensorEventListener {
 
   private static final String TAG = "FileLogger";
   private static final String FILE_PREFIX = "gnss_log";
@@ -407,6 +410,52 @@ public class FileLogger implements GnssListener {
   private void logError(String errorMessage) {
     Log.e(GnssContainer.TAG + TAG, errorMessage);
     Toast.makeText(mContext, errorMessage, Toast.LENGTH_LONG).show();
+  }
+
+  @Override
+  public void onSensorChanged(SensorEvent event) {
+    switch (event.sensor.getType()) {
+      case Sensor.TYPE_ACCELEROMETER: {
+        String ACCStream =
+                String.format("INS,%s%s%s%s", "ACC ", System.nanoTime() + " ", String.valueOf(event.values[0]) + ' ', String.valueOf(event.values[1])
+                        + ' ' + String.valueOf(event.values[2]));
+        synchronized (mFileLock) {
+          if (mFileWriter == null) {
+            return;
+          }
+          try {
+            mFileWriter.write(ACCStream);
+            mFileWriter.newLine();
+          } catch (IOException e) {
+            logException(ERROR_WRITING_FILE, e);
+          }
+        }
+        break;
+      }
+      case Sensor.TYPE_GYROSCOPE: {
+        synchronized (mFileLock) {
+          if (mFileWriter == null) {
+            return;
+          }
+
+          String GYRStream =
+                  String.format("INS,%s%s%s%s", "GYR ", System.nanoTime() + " ", String.valueOf(event.values[0]) + ' ', String.valueOf(event.values[1])
+                          + ' ' + String.valueOf(event.values[2]));
+          try {
+            mFileWriter.write(GYRStream);
+            mFileWriter.newLine();
+          } catch (IOException e) {
+            logException(ERROR_WRITING_FILE, e);
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  @Override
+  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
   }
 
   /**

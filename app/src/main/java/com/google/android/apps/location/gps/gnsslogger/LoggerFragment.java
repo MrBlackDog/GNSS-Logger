@@ -50,6 +50,7 @@ public class LoggerFragment extends Fragment implements TimerListener {
   private static final String TIMER_FRAGMENT_TAG = "timer";
 
   private TextView mLogView;
+  private TextView mMesageView;
   private ScrollView mScrollView;
   private FileLogger mFileLogger;
   private UiLogger mUiLogger;
@@ -129,6 +130,7 @@ public class LoggerFragment extends Fragment implements TimerListener {
   public View onCreateView(
       LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     View newView = inflater.inflate(R.layout.fragment_log, container, false /* attachToRoot */);
+
 
     mLogView = (TextView) newView.findViewById(R.id.log_view);
     mScrollView = (ScrollView) newView.findViewById(R.id.log_scroll);
@@ -258,6 +260,11 @@ public class LoggerFragment extends Fragment implements TimerListener {
     mTimer.setEnabled(start);
     mStartLog.setEnabled(start);
     mSendFile.setEnabled(!start);
+  }
+
+  public void SetTextMessage(String text)
+  {
+    mMesageView.setText( mMesageView.getText() + "\n" + System.currentTimeMillis() + " " + text);
   }
 
   /**

@@ -16,10 +16,14 @@
 
 package com.google.android.apps.location.gps.gnsslogger;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.hardware.Sensor;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -384,7 +388,9 @@ public class SettingsFragment extends Fragment {
     return view;
   }
 
-  private void logException(String errorMessage, Exception e) {
+
+
+    private void logException(String errorMessage, Exception e) {
     Log.e(GnssContainer.TAG + TAG, errorMessage, e);
     Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
   }

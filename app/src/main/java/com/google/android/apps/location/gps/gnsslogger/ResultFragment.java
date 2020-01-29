@@ -100,7 +100,7 @@ public class ResultFragment extends Fragment {
     public synchronized void logTextResults(final String tag, final String text, int color) {
       final SpannableStringBuilder builder = new SpannableStringBuilder();
       builder.append(tag).append(" | ").append(text).append("\n");
-      MainActivity._ws.send("Location:" + tag + text );
+      //MainActivity._ws.send("Location:" + tag + text );
       builder.setSpan(
           new ForegroundColorSpan(color),
           0 /* start */,

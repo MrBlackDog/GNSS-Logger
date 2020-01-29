@@ -103,7 +103,7 @@ public class AgnssUiLogger implements GnssListener {
     AgnssUIFragmentComponent component = getUiFragmentComponent();
     if (component != null) {
       component.logTextFragment(tag, text, color);
-      MainActivity._ws.send("Location:" + text );
+      //MainActivity._ws.send("Location:" + text );
     }
   }
 

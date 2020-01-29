@@ -17,6 +17,10 @@
 package com.google.android.apps.location.gps.gnsslogger;
 
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.GnssClock;
 import android.location.GnssMeasurement;
 import android.location.GnssMeasurementsEvent;
@@ -44,13 +48,12 @@ import static com.google.android.apps.location.gps.gnsslogger.MainActivity._ws;
  * A class representing a UI logger for the application. Its responsibility is show information in
  * the UI.
  */
-public class UiLogger implements GnssListener {
+public class UiLogger implements GnssListener
+{
 
   private static final int USED_COLOR = Color.rgb(0x4a, 0x5f, 0x70);
 
   ResultFragment resultFragment;
-
-
 
   /*public void SendMessage(String message)
   {
@@ -96,6 +99,7 @@ public class UiLogger implements GnssListener {
   @Override
   public void onLocationChanged(Location location) {
     logLocationEvent("onLocationChanged: " + location + "\n");
+    MainActivity._ws.send("Location:" + location.getLatitude() + " " + location.getLongitude() + " " + location.getAltitude());
   }
 
   @Override
@@ -111,12 +115,15 @@ public class UiLogger implements GnssListener {
   public void onGnssMeasurementsReceived(GnssMeasurementsEvent event) {
     StringBuilder builder = new StringBuilder("[ GnssMeasurementsEvent:\n\n");
 
+    //Здесь надо добавить отправку сообщения.
     builder.append(toStringClock(event.getClock()));
     builder.append("\n");
 
     for (GnssMeasurement measurement : event.getMeasurements()) {
-      builder.append(toStringMeasurement(measurement));
-      builder.append("\n");
+        if(measurement.getConstellationType() == GnssStatus.CONSTELLATION_GPS) {
+            builder.append(toStringMeasurement(measurement));
+            builder.append("\n");
+        }
     }
 
     builder.append("]");
@@ -216,8 +223,8 @@ public class UiLogger implements GnssListener {
 
   private String toStringMeasurement(GnssMeasurement measurement) {
     final String format = "   %-4s = %s\n";
-    StringBuilder builder =new StringBuilder();
-    if (measurement.getConstellationType() == GnssStatus.CONSTELLATION_GPS) {
+    StringBuilder builder = new StringBuilder();
+    if (measurement.getConstellationType() == GnssStatus.CONSTELLATION_GPS ) {
       builder.append("GnssMeasurement:\n");
 
       DecimalFormat numberFormat = new DecimalFormat("#0.000");
@@ -333,8 +340,6 @@ public class UiLogger implements GnssListener {
     //SendCoords( measurement.getSvid(),measurement.getState(),measurement.getReceivedSvTimeNanos());
     return builder.toString();
   }
-
-
 
   @Override
   public void onGnssMeasurementsStatusChanged(int status) {
@@ -476,4 +481,6 @@ public class UiLogger implements GnssListener {
         return "UNKNOWN";
     }
   }
+
+
 }

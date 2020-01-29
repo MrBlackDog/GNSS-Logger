@@ -46,7 +46,8 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-      <TextView
+
+        <TextView
           android:id="@+id/timer_display"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"

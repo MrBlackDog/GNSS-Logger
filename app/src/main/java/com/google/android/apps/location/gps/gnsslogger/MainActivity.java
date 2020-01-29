@@ -29,6 +29,10 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
@@ -58,7 +62,7 @@ import okhttp3.WebSocket;
 
 /** The activity for the application. */
 public class MainActivity extends AppCompatActivity
-    implements OnConnectionFailedListener, ConnectionCallbacks, GroundTruthModeSwitcher {
+    implements OnConnectionFailedListener, ConnectionCallbacks, GroundTruthModeSwitcher, SensorEventListener {
   private static final int LOCATION_REQUEST_ID = 1;
   private static final String[] REQUIRED_PERMISSIONS = {
     Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -88,6 +92,19 @@ public class MainActivity extends AppCompatActivity
   private final ActivityDetectionBroadcastReceiver mBroadcastReceiver =
       new ActivityDetectionBroadcastReceiver();
 
+  public static SensorManager sensorManager;
+  public static Sensor sensor;
+  private final float[] accelerometerReading = new float[3];
+  private final float[] magnetometerReading = new float[3];
+
+  private final float[] rotationMatrix = new float[9];
+  private final float[] orientationAngles = new float[3];
+
+  private static final float NS2S = 1.0f / 1000000000.0f;
+  private final float[] deltaRotationVector = new float[4];
+  private float timestamp;
+  private final float EPSILON = 1e-6f;
+
   private ServiceConnection mConnection =
       new ServiceConnection() {
         @Override
@@ -112,9 +129,19 @@ public class MainActivity extends AppCompatActivity
   protected void onResume() {
     super.onResume();
     LocalBroadcastManager.getInstance(this)
-        .registerReceiver(
-            mBroadcastReceiver, new IntentFilter(
-                DetectedActivitiesIntentReceiver.AR_RESULT_BROADCAST_ACTION));
+            .registerReceiver(
+                    mBroadcastReceiver, new IntentFilter(
+                            DetectedActivitiesIntentReceiver.AR_RESULT_BROADCAST_ACTION));
+    Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    if (accelerometer != null) {
+      sensorManager.registerListener(this, accelerometer,
+              SensorManager.SENSOR_DELAY_GAME);
+    }
+    Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+    if (gyro != null) {
+      sensorManager.registerListener(this, gyro,
+              SensorManager.SENSOR_DELAY_GAME);
+    }
   }
 
   @Override
@@ -127,7 +154,6 @@ public class MainActivity extends AppCompatActivity
   protected void onStop() {
     super.onStop();
     unbindService(mConnection);
-
   }
 
   @Override
@@ -137,8 +163,7 @@ public class MainActivity extends AppCompatActivity
     super.onDestroy();
   }
 
-  public void Connect()
-  {
+  public void Connect(){
     sm = new SocketManager();
     _ws = sm.Connect();
     //SendGUIDandLobbyInfo(LobbyName,Pass,Status);
@@ -191,6 +216,8 @@ public class MainActivity extends AppCompatActivity
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     buildGoogleApiClient();
+    sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+   // sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     Connect();
     requestPermissionAndSetupFragments(this);
 
@@ -232,6 +259,101 @@ public class MainActivity extends AppCompatActivity
     if (Log.isLoggable(TAG, Log.INFO)) {
       Log.i(TAG, "Connection suspended");
     }
+  }
+
+  @Override
+  public void onSensorChanged(SensorEvent event) {
+    switch (event.sensor.getType())
+    {
+      case  Sensor.TYPE_ACCELEROMETER:
+      {
+        float[] gravity = new float[3];
+        float[] linear_acceleration = new float[3];
+        final float alpha = 0.8f;
+        // Isolate the force of gravity with the low-pass filter.
+        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+        // Remove the gravity contribution with the high-pass filter.
+        linear_acceleration[0] = event.values[0] - gravity[0];
+        linear_acceleration[1] = event.values[1] - gravity[1];
+        linear_acceleration[2] = event.values[2] - gravity[2];
+       // _ws.send(String.valueOf(linear_acceleration[0]) + ' ' + String.valueOf(linear_acceleration[1])
+         //       + ' ' + String.valueOf(linear_acceleration[2]) );
+    /* final String str = "INS:" + "ACC " + System.nanoTime() +" " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
+                + ' ' + String.valueOf(event.values[2]);
+        Thread thread = new Thread(new Runnable() {
+          @Override
+          public void run() {
+            MainActivity._ws.send(str);
+          }
+        });
+        thread.start();*/
+        break;
+      }
+      case Sensor.TYPE_GYROSCOPE:
+      {
+        // This timestep's delta rotation to be multiplied by the current rotation
+        // after computing it from the gyro sample data.
+        if (timestamp != 0) {
+          final float dT = (event.timestamp - timestamp) * NS2S;
+          // Axis of the rotation sample, not normalized yet.
+          float axisX = event.values[0];
+          float axisY = event.values[1];
+          float axisZ = event.values[2];
+
+          // Calculate the angular speed of the sample
+          float omegaMagnitude = (float) Math.sqrt(axisX*axisX + axisY*axisY + axisZ*axisZ);
+
+          // Normalize the rotation vector if it's big enough to get the axis
+          // (that is, EPSILON should represent your maximum allowable margin of error)
+          if (omegaMagnitude > EPSILON) {
+            axisX /= omegaMagnitude;
+            axisY /= omegaMagnitude;
+            axisZ /= omegaMagnitude;
+          }
+
+          // Integrate around this axis with the angular speed by the timestep
+          // in order to get a delta rotation from this sample over the timestep
+          // We will convert this axis-angle representation of the delta rotation
+          // into a quaternion before turning it into the rotation matrix.
+          float thetaOverTwo = omegaMagnitude * dT / 2.0f;
+          float sinThetaOverTwo =(float) Math.sin(thetaOverTwo);
+          float cosThetaOverTwo =(float) Math.cos(thetaOverTwo);
+          deltaRotationVector[0] = sinThetaOverTwo * axisX;
+          deltaRotationVector[1] = sinThetaOverTwo * axisY;
+          deltaRotationVector[2] = sinThetaOverTwo * axisZ;
+          deltaRotationVector[3] = cosThetaOverTwo;
+        }
+        timestamp = event.timestamp;
+        float[] deltaRotationMatrix = new float[9];
+        SensorManager.getRotationMatrixFromVector(deltaRotationMatrix, deltaRotationVector);
+//        _ws.send(String.valueOf(deltaRotationVector[0]) + ' ' + String.valueOf(deltaRotationVector[1])
+//              + ' ' + String.valueOf(deltaRotationVector[2]) + ' ' + String.valueOf(deltaRotationVector[3]));
+       /* final String str ="INS:" + "GYR " + System.nanoTime() +" " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
+                + ' ' + String.valueOf(event.values[2]);
+        Thread thread = new Thread(new Runnable() {
+          @Override
+          public void run() {
+            MainActivity._ws.send(str);
+          }
+        });
+        thread.start();*/
+
+        //   textView10.setText(deltaRotationMatrix[0] + "\n" + deltaRotationMatrix[1] + "\n" + deltaRotationMatrix[2] + "\n" + deltaRotationMatrix[0] + "\n" +
+       //         deltaRotationMatrix[3] + "\n" + deltaRotationMatrix[4] + "\n" +deltaRotationMatrix[5] + "\n" +
+         //       deltaRotationMatrix[6] + "\n" +deltaRotationMatrix[7] + "\n" +deltaRotationMatrix[8]);
+        // User code should concatenate the delta rotation we computed with the current rotation
+        // in order to get the updated rotation.
+        // rotationCurrent = rotationCurrent * deltaRotationMatrix;
+        break;
+      }
+    }
+  }
+
+  @Override
+  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
   }
 
   /**
