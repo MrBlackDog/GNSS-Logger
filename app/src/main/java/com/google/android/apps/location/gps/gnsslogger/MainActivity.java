@@ -36,7 +36,9 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
@@ -49,6 +51,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
@@ -56,6 +60,11 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Locale;
 
 import okhttp3.WebSocket;
@@ -78,6 +87,11 @@ public class MainActivity extends AppCompatActivity
 
   public static WebSocket _ws;
   public static SocketManager sm;
+
+  public final static String model = "Smartphone3";
+  private final static String FILE_NAME = "INS" + model +".txt";
+  private File myFile = new File("/sdcard/INS" + model + ".txt");
+
   public final Object locker = new Object();
   public boolean Connected;
 
@@ -121,6 +135,7 @@ public class MainActivity extends AppCompatActivity
   @Override
   protected void onStart() {
     super.onStart();
+
     // Bind to the timer service to ensure it is available when app is running
     bindService(new Intent(this, TimerService.class), mConnection, Context.BIND_AUTO_CREATE);
   }
@@ -140,6 +155,16 @@ public class MainActivity extends AppCompatActivity
     Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
     if (gyro != null) {
       sensorManager.registerListener(this, gyro,
+              SensorManager.SENSOR_DELAY_GAME);
+    }
+    Sensor magn = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+    if (gyro != null) {
+      sensorManager.registerListener(this, magn,
+              SensorManager.SENSOR_DELAY_GAME);
+    }
+    Sensor Rotation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+    if (gyro != null) {
+      sensorManager.registerListener(this, Rotation,
               SensorManager.SENSOR_DELAY_GAME);
     }
   }
@@ -217,6 +242,13 @@ public class MainActivity extends AppCompatActivity
     setContentView(R.layout.activity_main);
     buildGoogleApiClient();
     sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+    try {
+      myFile.createNewFile();
+    }
+    catch (Exception e)
+    {
+
+    }
    // sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     Connect();
     requestPermissionAndSetupFragments(this);
@@ -267,20 +299,20 @@ public class MainActivity extends AppCompatActivity
     {
       case  Sensor.TYPE_ACCELEROMETER:
       {
-        float[] gravity = new float[3];
-        float[] linear_acceleration = new float[3];
-        final float alpha = 0.8f;
+    //    float[] gravity = new float[3];
+    //    float[] linear_acceleration = new float[3];
+    //    final float alpha = 0.8f;
         // Isolate the force of gravity with the low-pass filter.
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+     //   gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+      //  gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+      //  gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
         // Remove the gravity contribution with the high-pass filter.
-        linear_acceleration[0] = event.values[0] - gravity[0];
-        linear_acceleration[1] = event.values[1] - gravity[1];
-        linear_acceleration[2] = event.values[2] - gravity[2];
+      //  linear_acceleration[0] = event.values[0] - gravity[0];
+       // linear_acceleration[1] = event.values[1] - gravity[1];
+      //  linear_acceleration[2] = event.values[2] - gravity[2];
        // _ws.send(String.valueOf(linear_acceleration[0]) + ' ' + String.valueOf(linear_acceleration[1])
          //       + ' ' + String.valueOf(linear_acceleration[2]) );
-    /* final String str = "INS:" + "ACC " + System.nanoTime() +" " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
+     final String str = "INS:" + "ACC " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
                 + ' ' + String.valueOf(event.values[2]);
         Thread thread = new Thread(new Runnable() {
           @Override
@@ -288,14 +320,23 @@ public class MainActivity extends AppCompatActivity
             MainActivity._ws.send(str);
           }
         });
-        thread.start();*/
+        thread.start();
+        try {
+          FileOutputStream fOut = new FileOutputStream(myFile,true);
+          OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+          myOutWriter.append(model +" "+ str).append("\n");
+          myOutWriter.close();
+          fOut.close();
+        } catch (Exception e) {
+          Log.e("ERRR", "Could not create file",e);
+        } ;
         break;
       }
       case Sensor.TYPE_GYROSCOPE:
       {
         // This timestep's delta rotation to be multiplied by the current rotation
         // after computing it from the gyro sample data.
-        if (timestamp != 0) {
+    /*    if (timestamp != 0) {
           final float dT = (event.timestamp - timestamp) * NS2S;
           // Axis of the rotation sample, not normalized yet.
           float axisX = event.values[0];
@@ -328,17 +369,46 @@ public class MainActivity extends AppCompatActivity
         timestamp = event.timestamp;
         float[] deltaRotationMatrix = new float[9];
         SensorManager.getRotationMatrixFromVector(deltaRotationMatrix, deltaRotationVector);
-//        _ws.send(String.valueOf(deltaRotationVector[0]) + ' ' + String.valueOf(deltaRotationVector[1])
-//              + ' ' + String.valueOf(deltaRotationVector[2]) + ' ' + String.valueOf(deltaRotationVector[3]));
-       /* final String str ="INS:" + "GYR " + System.nanoTime() +" " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
+        _ws.send(String.valueOf(deltaRotationVector[0]) + ' ' + String.valueOf(deltaRotationVector[1])
+             + ' ' + String.valueOf(deltaRotationVector[2]) + ' ' + String.valueOf(deltaRotationVector[3]));*/
+        final String str ="INS:" + "GYR " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
                 + ' ' + String.valueOf(event.values[2]);
+      /*  FileOutputStream fos = null;
+        try {
+          fos = openFileOutput(FILE_NAME, MODE_APPEND);
+          fos.write(str.getBytes());
+        }
+        catch(IOException ex) {
+         }
+        finally{
+          try{
+            if(fos!=null) {
+              //Toast.makeText(this, Context.getFileStreamPath( FILE_NAME), Toast.LENGTH_SHORT).show();
+
+              fos.close();
+            }
+          }
+          catch(IOException ex){
+
+          }
+        }*/
+        try {
+          FileOutputStream fOut = new FileOutputStream(myFile,true);
+          OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+          myOutWriter.append(model +" " + str).append("\n");
+          myOutWriter.close();
+          fOut.close();
+        } catch (Exception e) {
+          Log.e("ERRR", "Could not create file",e);
+        } ;
+
         Thread thread = new Thread(new Runnable() {
           @Override
           public void run() {
             MainActivity._ws.send(str);
           }
         });
-        thread.start();*/
+        thread.start();
 
         //   textView10.setText(deltaRotationMatrix[0] + "\n" + deltaRotationMatrix[1] + "\n" + deltaRotationMatrix[2] + "\n" + deltaRotationMatrix[0] + "\n" +
        //         deltaRotationMatrix[3] + "\n" + deltaRotationMatrix[4] + "\n" +deltaRotationMatrix[5] + "\n" +
@@ -346,8 +416,49 @@ public class MainActivity extends AppCompatActivity
         // User code should concatenate the delta rotation we computed with the current rotation
         // in order to get the updated rotation.
         // rotationCurrent = rotationCurrent * deltaRotationMatrix;
+
         break;
       }
+      case Sensor.TYPE_MAGNETIC_FIELD: {
+        final String str = "INS:" + "MAG " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
+                + ' ' + String.valueOf(event.values[2]);
+        Thread thread = new Thread(new Runnable() {
+          @Override
+          public void run() {
+            MainActivity._ws.send(str);
+          }
+        });
+        thread.start();
+        try {
+          FileOutputStream fOut = new FileOutputStream(myFile,true);
+          OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+          myOutWriter.append(model +" "+ str).append("\n");
+          myOutWriter.close();
+          fOut.close();
+        } catch (Exception e) {
+          Log.e("ERRR", "Could not create file",e);
+        } ;
+        break;
+      }
+      case Sensor.TYPE_ROTATION_VECTOR:
+        final String str = "INS:" + "ROT " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
+                + ' ' + String.valueOf(event.values[2])  + ' ' + String.valueOf(event.values[3]  + ' ' + String.valueOf(event.values[4]));
+        Thread thread = new Thread(new Runnable() {
+          @Override
+          public void run() {
+            MainActivity._ws.send(str);
+          }
+        });
+        thread.start();
+        try {
+          FileOutputStream fOut = new FileOutputStream(myFile,true);
+          OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+          myOutWriter.append(model +" "+ str).append("\n");
+          myOutWriter.close();
+          fOut.close();
+        } catch (Exception e) {
+          Log.e("ERRR", "Could not create file",e);
+        } ;
     }
   }
 
@@ -356,6 +467,23 @@ public class MainActivity extends AppCompatActivity
 
   }
 
+  public boolean isExternalStorageWritable() {
+    String state = Environment.getExternalStorageState();
+    if (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).equals(state)) {
+      return true;
+    }
+    return false;
+  }
+  public File getDir(String albumName)
+  {
+    File file = new File(Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_DOCUMENTS),albumName );
+    //"INS Logs"
+    if (!file.mkdirs()) {
+
+    }
+    return file;
+  }
   /**
    * A {@link FragmentPagerAdapter} that returns a fragment corresponding to one of the
    * sections/tabs/pages.

@@ -356,7 +356,7 @@ public class FileLogger implements GnssListener, SensorEventListener {
     String clockStream =
         String.format(
             "Raw,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
-            SystemClock.elapsedRealtime(),
+            SystemClock.elapsedRealtimeNanos(),
             clock.getTimeNanos(),
             clock.hasLeapSecond() ? clock.getLeapSecond() : "",
             clock.hasTimeUncertaintyNanos() ? clock.getTimeUncertaintyNanos() : "",

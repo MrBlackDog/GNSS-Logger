@@ -28,12 +28,15 @@ import android.location.GnssNavigationMessage;
 import android.location.GnssStatus;
 import android.location.Location;
 import android.location.LocationProvider;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import com.google.android.apps.location.gps.gnsslogger.LoggerFragment.UIFragmentComponent;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Collection;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -124,10 +127,61 @@ public class UiLogger implements GnssListener
             builder.append(toStringMeasurement(measurement));
             builder.append("\n");
         }
+        writeGnssMeasurementToFile(event.getClock(),  measurement);
     }
 
     builder.append("]");
+  //  writeGnssMeasurementToFile(event.getClock(),  event.getMeasurements());
     logMeasurementEvent("onGnsssMeasurementsReceived: " + builder.toString());
+  }
+  private void writeGnssMeasurementToFile(GnssClock clock, GnssMeasurement measurement)
+  {
+    String clockStream =
+            String.format(
+                    "Raw,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+                    SystemClock.elapsedRealtimeNanos(),
+                    clock.getTimeNanos(),
+                    clock.hasLeapSecond() ? clock.getLeapSecond() : "",
+                    clock.hasTimeUncertaintyNanos() ? clock.getTimeUncertaintyNanos() : "",
+                    clock.getFullBiasNanos(),
+                    clock.hasBiasNanos() ? clock.getBiasNanos() : "",
+                    clock.hasBiasUncertaintyNanos() ? clock.getBiasUncertaintyNanos() : "",
+                    clock.hasDriftNanosPerSecond() ? clock.getDriftNanosPerSecond() : "",
+                    clock.hasDriftUncertaintyNanosPerSecond()
+                            ? clock.getDriftUncertaintyNanosPerSecond()
+                            : "",
+                    clock.getHardwareClockDiscontinuityCount() + ",");
+   // for (GnssMeasurement measurement : measurements) {
+      String measurementStream =
+              String.format(
+                      "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+                      measurement.getSvid(),
+                      measurement.getTimeOffsetNanos(),
+                      measurement.getState(),
+                      measurement.getReceivedSvTimeNanos(),
+                      measurement.getReceivedSvTimeUncertaintyNanos(),
+                      measurement.getCn0DbHz(),
+                      measurement.getPseudorangeRateMetersPerSecond(),
+                      measurement.getPseudorangeRateUncertaintyMetersPerSecond(),
+                      measurement.getAccumulatedDeltaRangeState(),
+                      measurement.getAccumulatedDeltaRangeMeters(),
+                      measurement.getAccumulatedDeltaRangeUncertaintyMeters(),
+                      measurement.hasCarrierFrequencyHz() ? measurement.getCarrierFrequencyHz() : "",
+                      measurement.hasCarrierCycles() ? measurement.getCarrierCycles() : "",
+                      measurement.hasCarrierPhase() ? measurement.getCarrierPhase() : "",
+                      measurement.hasCarrierPhaseUncertainty()
+                              ? measurement.getCarrierPhaseUncertainty()
+                              : "",
+                      measurement.getMultipathIndicator(),
+                      measurement.hasSnrInDb() ? measurement.getSnrInDb() : "",
+                      measurement.getConstellationType(),
+                      Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                              && measurement.hasAutomaticGainControlLevelDb()
+                              ? measurement.getAutomaticGainControlLevelDb()
+                              : "",
+                      measurement.hasCarrierFrequencyHz() ? measurement.getCarrierFrequencyHz() : "");
+    MainActivity._ws.send("GnssMeasurement:" + clockStream + measurementStream);
+  //  }
   }
 
   public void SendCoords(float x, float y, float z) {
@@ -223,7 +277,7 @@ public class UiLogger implements GnssListener
 
   private String toStringMeasurement(GnssMeasurement measurement) {
     final String format = "   %-4s = %s\n";
-    StringBuilder builder = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     if (measurement.getConstellationType() == GnssStatus.CONSTELLATION_GPS ) {
       builder.append("GnssMeasurement:\n");
 
@@ -331,7 +385,8 @@ public class UiLogger implements GnssListener
       Thread thread = new Thread(new Runnable() {
         @Override
         public void run() {
-          MainActivity._ws.send(measStr);
+         // MainActivity._ws.send(builder.toString());
+         // MainActivity._ws.send(measStr);
         }
       });
       thread.start();

@@ -20,7 +20,7 @@ public class SocketManager {
 
         WebSocketGolos wsc = new WebSocketGolos();
         WebSocket ws = client.newWebSocket(request, wsc);
-        ws.send("State:" + "Client:"  + "Smartphone2");
+        ws.send("State:" + "Client:"  + MainActivity.model);
         return ws;
     }
 }
