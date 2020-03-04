@@ -135,7 +135,6 @@ public class MainActivity extends AppCompatActivity
   @Override
   protected void onStart() {
     super.onStart();
-
     // Bind to the timer service to ensure it is available when app is running
     bindService(new Intent(this, TimerService.class), mConnection, Context.BIND_AUTO_CREATE);
   }
@@ -184,7 +183,6 @@ public class MainActivity extends AppCompatActivity
   @Override
   protected void onDestroy(){
     mGnssContainer.unregisterAll();
-    _ws.send("Close");
     super.onDestroy();
   }
 
@@ -241,15 +239,6 @@ public class MainActivity extends AppCompatActivity
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     buildGoogleApiClient();
-    sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-    try {
-      myFile.createNewFile();
-    }
-    catch (Exception e)
-    {
-
-    }
-   // sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     Connect();
     requestPermissionAndSetupFragments(this);
 
