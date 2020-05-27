@@ -146,6 +146,7 @@ public class MainActivity extends AppCompatActivity
             .registerReceiver(
                     mBroadcastReceiver, new IntentFilter(
                             DetectedActivitiesIntentReceiver.AR_RESULT_BROADCAST_ACTION));
+    sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
     Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     if (accelerometer != null) {
       sensorManager.registerListener(this, accelerometer,
