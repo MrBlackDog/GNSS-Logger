@@ -7,6 +7,9 @@
       <module fileurl="file://$PROJECT_DIR$/pseudorange/Gnss-Logger-pseudorange.iml" filepath="$PROJECT_DIR$/pseudorange/Gnss-Logger-pseudorange.iml" group="Gnss-Logger/pseudorange" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="gnss-logger/app" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/gnss-logger.iml" filepath="$PROJECT_DIR$/.idea/modules/gnss-logger.iml" group="gnss-logger" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gnss-logger2.iml" filepath="$PROJECT_DIR$/.idea/modules/gnss-logger2.iml" group="gnss-logger2" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/gnss-logger2-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/gnss-logger2-app.iml" group="gnss-logger2/app" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/pseudorange/gnss-logger2-pseudorange.iml" filepath="$PROJECT_DIR$/.idea/modules/pseudorange/gnss-logger2-pseudorange.iml" group="gnss-logger2/pseudorange" />
       <module fileurl="file://$PROJECT_DIR$/pseudorange/pseudorange.iml" filepath="$PROJECT_DIR$/pseudorange/pseudorange.iml" group="gnss-logger/pseudorange" />
     </modules>
   </component>
