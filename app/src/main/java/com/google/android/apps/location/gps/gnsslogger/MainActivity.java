@@ -76,13 +76,14 @@ public class MainActivity extends AppCompatActivity
   private static final String[] REQUIRED_PERMISSIONS = {
     Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE
   };
-  private static final int NUMBER_OF_FRAGMENTS = 6;
+  private static final int NUMBER_OF_FRAGMENTS = 7;
   private static final int FRAGMENT_INDEX_SETTING = 0;
   private static final int FRAGMENT_INDEX_LOGGER = 1;
   private static final int FRAGMENT_INDEX_RESULT = 2;
   private static final int FRAGMENT_INDEX_MAP = 3;
   private static final int FRAGMENT_INDEX_AGNSS = 4;
   private static final int FRAGMENT_INDEX_PLOT = 5;
+  private static final int FRAGMENT_INDEX_INC = 6;
   private static final String TAG = "MainActivity";
 
   public static WebSocket _ws;
@@ -498,6 +499,8 @@ public class MainActivity extends AppCompatActivity
           return mFragments[FRAGMENT_INDEX_AGNSS];
         case FRAGMENT_INDEX_PLOT:
           return mFragments[FRAGMENT_INDEX_PLOT];
+        case FRAGMENT_INDEX_INC:
+          return mFragments[FRAGMENT_INDEX_INC];
         default:
           throw new IllegalArgumentException("Invalid section: " + position);
       }
@@ -525,6 +528,8 @@ public class MainActivity extends AppCompatActivity
           return getString(R.string.title_agnss).toUpperCase(locale);
         case FRAGMENT_INDEX_PLOT:
           return getString(R.string.title_plot).toLowerCase(locale);
+        case FRAGMENT_INDEX_INC:
+          return getString(R.string.title_INC).toLowerCase(locale);
         default:
           return super.getPageTitle(position);
       }
@@ -586,6 +591,13 @@ public class MainActivity extends AppCompatActivity
     PlotFragment plotFragment = new PlotFragment();
     mFragments[FRAGMENT_INDEX_PLOT] = plotFragment;
     mRealTimePositionVelocityCalculator.setPlotFragment(plotFragment);
+
+    FragmentINC incFragment = new FragmentINC();
+    //FragmentINC.setGpsContainer(mGnssContainer);
+    //settingsFragment.setRealTimePositionVelocityCalculator(mRealTimePositionVelocityCalculator);
+    //settingsFragment.setAutoModeSwitcher(this);
+    mFragments[FRAGMENT_INDEX_INC] = incFragment;
+
 
 
     // The viewpager that will host the section contents.
