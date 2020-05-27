@@ -1,17 +1,17 @@
 package com.google.android.apps.location.gps.gnsslogger;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link FragmentINC#newInstance} factory method to
+ * Use the {@link FragmentINS#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FragmentINC extends Fragment {
+public class FragmentINS extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -22,7 +22,7 @@ public class FragmentINC extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    public FragmentINC() {
+    public FragmentINS() {
         // Required empty public constructor
     }
 
@@ -35,8 +35,8 @@ public class FragmentINC extends Fragment {
      * @return A new instance of fragment FragmentINC.
      */
     // TODO: Rename and change types and number of parameters
-    public static FragmentINC newInstance(String param1, String param2) {
-        FragmentINC fragment = new FragmentINC();
+    public static FragmentINS newInstance(String param1, String param2) {
+        FragmentINS fragment = new FragmentINS();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
