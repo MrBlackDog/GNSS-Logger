@@ -12,6 +12,7 @@
     <string name="title_wls">WLS</string>
     <string name="title_plot">Plot</string>
     <string name="title_INC">INC</string>
+    <string name="title_RN">RN</string>
 
     <string name="location_label">Location</string>
     <string name="measurements_label">Measurements</string>

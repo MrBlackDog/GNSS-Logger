@@ -51,7 +51,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -63,7 +62,6 @@ import com.google.android.gms.location.DetectedActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Locale;
 
@@ -76,7 +74,7 @@ public class MainActivity extends AppCompatActivity
   private static final String[] REQUIRED_PERMISSIONS = {
     Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE
   };
-  private static final int NUMBER_OF_FRAGMENTS = 7;
+  private static final int NUMBER_OF_FRAGMENTS = 8;
   private static final int FRAGMENT_INDEX_SETTING = 0;
   private static final int FRAGMENT_INDEX_LOGGER = 1;
   private static final int FRAGMENT_INDEX_RESULT = 2;
@@ -84,6 +82,7 @@ public class MainActivity extends AppCompatActivity
   private static final int FRAGMENT_INDEX_AGNSS = 4;
   private static final int FRAGMENT_INDEX_PLOT = 5;
   private static final int FRAGMENT_INDEX_INC = 6;
+  private static final int FRAGMENT_INDEX_RN = 7;
   private static final String TAG = "MainActivity";
 
   public static WebSocket _ws;
@@ -501,6 +500,8 @@ public class MainActivity extends AppCompatActivity
           return mFragments[FRAGMENT_INDEX_PLOT];
         case FRAGMENT_INDEX_INC:
           return mFragments[FRAGMENT_INDEX_INC];
+        case FRAGMENT_INDEX_RN:
+          return mFragments[FRAGMENT_INDEX_RN];
         default:
           throw new IllegalArgumentException("Invalid section: " + position);
       }
@@ -530,6 +531,8 @@ public class MainActivity extends AppCompatActivity
           return getString(R.string.title_plot).toLowerCase(locale);
         case FRAGMENT_INDEX_INC:
           return getString(R.string.title_INC).toLowerCase(locale);
+        case FRAGMENT_INDEX_RN:
+          return getString(R.string.title_RN).toLowerCase(locale);
         default:
           return super.getPageTitle(position);
       }
@@ -592,11 +595,16 @@ public class MainActivity extends AppCompatActivity
     mFragments[FRAGMENT_INDEX_PLOT] = plotFragment;
     mRealTimePositionVelocityCalculator.setPlotFragment(plotFragment);
 
-    FragmentINC incFragment = new FragmentINC();
+    INSFragment incFragment = new INSFragment();
     //FragmentINC.setGpsContainer(mGnssContainer);
     //settingsFragment.setRealTimePositionVelocityCalculator(mRealTimePositionVelocityCalculator);
     //settingsFragment.setAutoModeSwitcher(this);
     mFragments[FRAGMENT_INDEX_INC] = incFragment;
+    RelativeNavigationFragment rnFragment = new RelativeNavigationFragment();
+    //FragmentINC.setGpsContainer(mGnssContainer);
+    //settingsFragment.setRealTimePositionVelocityCalculator(mRealTimePositionVelocityCalculator);
+    //settingsFragment.setAutoModeSwitcher(this);
+    mFragments[FRAGMENT_INDEX_RN] = rnFragment;
 
 
 
