@@ -38,9 +38,11 @@ import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.PersistableBundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.TabLayout.TabLayoutOnPageChangeListener;
 import android.support.v13.app.FragmentPagerAdapter;
@@ -51,6 +53,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -131,6 +134,11 @@ public class MainActivity extends AppCompatActivity
           // Empty
         }
       };
+  TextView TextINC;
+  Sensor sensorAccel;
+  Sensor sensorGravity;
+
+
 
   @Override
   protected void onStart() {
@@ -149,7 +157,7 @@ public class MainActivity extends AppCompatActivity
     sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
     Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     if (accelerometer != null) {
-      sensorManager.registerListener(this, accelerometer,
+      sensorManager.registerListener(INSFragment, accelerometer,
               SensorManager.SENSOR_DELAY_GAME);
     }
     Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);

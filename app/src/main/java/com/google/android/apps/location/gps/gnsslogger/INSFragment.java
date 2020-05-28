@@ -1,5 +1,8 @@
 package com.google.android.apps.location.gps.gnsslogger;
 
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -11,7 +14,7 @@ import android.view.ViewGroup;
  * Use the {@link INSFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class INSFragment extends Fragment {
+public class INSFragment extends Fragment implements SensorEventListener {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -58,5 +61,15 @@ public class INSFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_i_n_c, container, false);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 }
