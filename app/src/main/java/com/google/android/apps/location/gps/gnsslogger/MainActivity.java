@@ -121,6 +121,9 @@ public class MainActivity extends AppCompatActivity
   private final float[] deltaRotationVector = new float[4];
   private float timestamp;
   private final float EPSILON = 1e-6f;
+  TextView TextINC;
+  Sensor sensorAccel;
+  Sensor sensorGravity;
 
   private ServiceConnection mConnection =
       new ServiceConnection() {
@@ -134,9 +137,7 @@ public class MainActivity extends AppCompatActivity
           // Empty
         }
       };
-  TextView TextINC;
-  Sensor sensorAccel;
-  Sensor sensorGravity;
+
 
 
 
@@ -154,10 +155,10 @@ public class MainActivity extends AppCompatActivity
             .registerReceiver(
                     mBroadcastReceiver, new IntentFilter(
                             DetectedActivitiesIntentReceiver.AR_RESULT_BROADCAST_ACTION));
-    sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+   /* sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
     Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     if (accelerometer != null) {
-      sensorManager.registerListener(INSFragment, accelerometer,
+      sensorManager.registerListener(, accelerometer,
               SensorManager.SENSOR_DELAY_GAME);
     }
     Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -174,7 +175,7 @@ public class MainActivity extends AppCompatActivity
     if (gyro != null) {
       sensorManager.registerListener(this, Rotation,
               SensorManager.SENSOR_DELAY_GAME);
-    }
+    }*/
   }
 
   @Override
@@ -250,6 +251,8 @@ public class MainActivity extends AppCompatActivity
     buildGoogleApiClient();
     Connect();
     requestPermissionAndSetupFragments(this);
+
+
 
   }
 
