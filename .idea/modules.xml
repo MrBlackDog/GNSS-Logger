@@ -10,6 +10,9 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/gnss-logger2.iml" filepath="$PROJECT_DIR$/.idea/modules/gnss-logger2.iml" group="gnss-logger2" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/gnss-logger2-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/gnss-logger2-app.iml" group="gnss-logger2/app" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pseudorange/gnss-logger2-pseudorange.iml" filepath="$PROJECT_DIR$/.idea/modules/pseudorange/gnss-logger2-pseudorange.iml" group="gnss-logger2/pseudorange" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gnss-logger3.iml" filepath="$PROJECT_DIR$/.idea/modules/gnss-logger3.iml" group="gnss-logger3" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/gnss-logger3-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/gnss-logger3-app.iml" group="gnss-logger3/app" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/pseudorange/gnss-logger3-pseudorange.iml" filepath="$PROJECT_DIR$/.idea/modules/pseudorange/gnss-logger3-pseudorange.iml" group="gnss-logger3/pseudorange" />
       <module fileurl="file://$PROJECT_DIR$/pseudorange/pseudorange.iml" filepath="$PROJECT_DIR$/pseudorange/pseudorange.iml" group="gnss-logger/pseudorange" />
     </modules>
   </component>

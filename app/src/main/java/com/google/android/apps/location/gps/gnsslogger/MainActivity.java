@@ -38,9 +38,11 @@ import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.PersistableBundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.TabLayout.TabLayoutOnPageChangeListener;
 import android.support.v13.app.FragmentPagerAdapter;
@@ -51,6 +53,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -74,14 +77,15 @@ public class MainActivity extends AppCompatActivity
   private static final String[] REQUIRED_PERMISSIONS = {
     Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE
   };
-  private static final int NUMBER_OF_FRAGMENTS = 7;
+  private static final int NUMBER_OF_FRAGMENTS = 8;
   private static final int FRAGMENT_INDEX_SETTING = 0;
   private static final int FRAGMENT_INDEX_LOGGER = 1;
   private static final int FRAGMENT_INDEX_RESULT = 2;
   private static final int FRAGMENT_INDEX_MAP = 3;
   private static final int FRAGMENT_INDEX_AGNSS = 4;
   private static final int FRAGMENT_INDEX_PLOT = 5;
-  private static final int FRAGMENT_INDEX_INS = 6;
+  private static final int FRAGMENT_INDEX_INC = 6;
+  private static final int FRAGMENT_INDEX_RN = 7;
   private static final String TAG = "MainActivity";
 
   public static WebSocket _ws;
@@ -117,6 +121,9 @@ public class MainActivity extends AppCompatActivity
   private final float[] deltaRotationVector = new float[4];
   private float timestamp;
   private final float EPSILON = 1e-6f;
+  TextView TextINC;
+  Sensor sensorAccel;
+  Sensor sensorGravity;
 
   private ServiceConnection mConnection =
       new ServiceConnection() {
@@ -130,6 +137,9 @@ public class MainActivity extends AppCompatActivity
           // Empty
         }
       };
+
+
+
 
   @Override
   protected void onStart() {
@@ -145,11 +155,10 @@ public class MainActivity extends AppCompatActivity
             .registerReceiver(
                     mBroadcastReceiver, new IntentFilter(
                             DetectedActivitiesIntentReceiver.AR_RESULT_BROADCAST_ACTION));
-    sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE) ;
-    Sensor accelerometer;
-    if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
-       accelerometer =sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-      sensorManager.registerListener(this, accelerometer,
+   /* sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+    Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    if (accelerometer != null) {
+      sensorManager.registerListener(, accelerometer,
               SensorManager.SENSOR_DELAY_GAME);
     }
     Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -166,7 +175,7 @@ public class MainActivity extends AppCompatActivity
     if (gyro != null) {
       sensorManager.registerListener(this, Rotation,
               SensorManager.SENSOR_DELAY_GAME);
-    }
+    }*/
   }
 
   @Override
@@ -431,8 +440,8 @@ public class MainActivity extends AppCompatActivity
         break;
       }
       case Sensor.TYPE_ROTATION_VECTOR:
-        final String str = "INS:" + "ROT " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
-                + " " + String.valueOf(event.values[2])  + " "+ String.valueOf(event.values[3]  + " " + String.valueOf(event.values[4]));
+        final String str = "INS:" + "ROT " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
+                + ' ' + String.valueOf(event.values[2])  + ' ' + String.valueOf(event.values[3]  + ' ' + String.valueOf(event.values[4]));
         Thread thread = new Thread(new Runnable() {
           @Override
           public void run() {
@@ -499,8 +508,10 @@ public class MainActivity extends AppCompatActivity
           return mFragments[FRAGMENT_INDEX_AGNSS];
         case FRAGMENT_INDEX_PLOT:
           return mFragments[FRAGMENT_INDEX_PLOT];
-        case FRAGMENT_INDEX_INS:
-          return mFragments[FRAGMENT_INDEX_INS];
+        case FRAGMENT_INDEX_INC:
+          return mFragments[FRAGMENT_INDEX_INC];
+        case FRAGMENT_INDEX_RN:
+          return mFragments[FRAGMENT_INDEX_RN];
         default:
           throw new IllegalArgumentException("Invalid section: " + position);
       }
@@ -528,8 +539,10 @@ public class MainActivity extends AppCompatActivity
           return getString(R.string.title_agnss).toUpperCase(locale);
         case FRAGMENT_INDEX_PLOT:
           return getString(R.string.title_plot).toLowerCase(locale);
-        case FRAGMENT_INDEX_INS:
+        case FRAGMENT_INDEX_INC:
           return getString(R.string.title_INC).toLowerCase(locale);
+        case FRAGMENT_INDEX_RN:
+          return getString(R.string.title_RN).toLowerCase(locale);
         default:
           return super.getPageTitle(position);
       }
@@ -592,12 +605,16 @@ public class MainActivity extends AppCompatActivity
     mFragments[FRAGMENT_INDEX_PLOT] = plotFragment;
     mRealTimePositionVelocityCalculator.setPlotFragment(plotFragment);
 
-    FragmentINS insFragment = new FragmentINS();
-    mFragments[FRAGMENT_INDEX_INS] = insFragment;
+    INSFragment incFragment = new INSFragment();
     //FragmentINC.setGpsContainer(mGnssContainer);
     //settingsFragment.setRealTimePositionVelocityCalculator(mRealTimePositionVelocityCalculator);
     //settingsFragment.setAutoModeSwitcher(this);
-
+    mFragments[FRAGMENT_INDEX_INC] = incFragment;
+    RelativeNavigationFragment rnFragment = new RelativeNavigationFragment();
+    //FragmentINC.setGpsContainer(mGnssContainer);
+    //settingsFragment.setRealTimePositionVelocityCalculator(mRealTimePositionVelocityCalculator);
+    //settingsFragment.setAutoModeSwitcher(this);
+    mFragments[FRAGMENT_INDEX_RN] = rnFragment;
 
 
 
