@@ -6,10 +6,14 @@ import android.location.GnssMeasurementsEvent;
 import android.location.GnssNavigationMessage;
 import android.location.GnssStatus;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.google.android.apps.location.gps.gnsslogger.GnssListener;
+import com.google.location.lbs.gnss.gps.pseudorange.Ecef2LlaConverter;
 import com.google.location.lbs.gnss.gps.pseudorange.GpsTime;
+import com.google.location.lbs.gnss.gps.pseudorange.Lla2EcefConverter;
 
 import Jama.Matrix;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -26,7 +30,8 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
     private static final int C_TO_N0_THRESHOLD_DB_HZ = 18;
     private static final int TOW_DECODED_MEASUREMENT_STATE_BIT = 3;
 
-    private int[] mReferenceLocation = null;
+    private double[] mReferenceLocation = null;
+    private double[] mReferenceLocationECEF = null;
     /**связаны с расчетом*/
     private double mArrivalTimeSinceGPSWeekNs = 0.0;
     private int mDayOfYear1To366 = 0;
@@ -41,23 +46,30 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
     double[] positionSolutionECEF;
     Matrix GradientMatrix;//Used Jama matrix class
     RealMatrix HMatrix;
+    RealMatrix SolutionMatrix;
 
     public RealTimeRelativePositionCalculator(GnssMeasurement measurement) {
     }
-
+    /** Iterative WLS method for relative navigation solution*/
     public void WLSSolution()
     {
 
     }
 
     /** Sets a rough location of the receiver that can be used to request SUPL assistance data */
-    public void setReferencePosition(int latE7, int lngE7, int altE7) {
+    public void setReferencePosition(double lat, double lng, double alt) {
         if (mReferenceLocation == null) {
-            mReferenceLocation = new int[3];
+            mReferenceLocation = new double[3];
+            mReferenceLocationECEF = new double[3];
         }
-        mReferenceLocation[0] = latE7;
-        mReferenceLocation[1] = lngE7;
-        mReferenceLocation[2] = altE7;
+        mReferenceLocation[0] = lat;
+        mReferenceLocation[1] = lng;
+        mReferenceLocation[2] = alt;
+        Ecef2LlaConverter.GeodeticLlaValues geodeticLlaValues = new Ecef2LlaConverter.GeodeticLlaValues(lat,lng,alt);
+        mReferenceLocationECEF = Lla2EcefConverter.convertFromLlaToEcefMeters(geodeticLlaValues);
+        Log.e("RefLocation:",String.valueOf(mReferenceLocationECEF[0]) +" " +
+                String.valueOf(mReferenceLocationECEF[1])+ " " +
+                String.valueOf(mReferenceLocationECEF[2]));
     }
 
     @Override
@@ -68,8 +80,13 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
     public void onProviderDisabled(String provider) {
     }
 
+    /**Отсюда можно получить первое решение, для получения хорошего начального приближения*/
     @Override
     public void onLocationChanged(Location location) {
+        if (location.getProvider().equals(LocationManager.GPS_PROVIDER)){
+            if(mReferenceLocationECEF == null)
+            setReferencePosition(location.getLatitude(),location.getLongitude(),location.getAltitude());
+        }
     }
 
     @Override
