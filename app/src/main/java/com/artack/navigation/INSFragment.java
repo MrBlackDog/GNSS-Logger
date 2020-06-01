@@ -7,9 +7,11 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.SystemClock;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.google.android.apps.location.gps.gnsslogger.R;
 
@@ -26,6 +28,8 @@ public class INSFragment extends Fragment implements SensorEventListener {
     private static final String ARG_PARAM2 = "param2";
     public static SensorManager sensorManager;
     public static Sensor sensor;
+    public static boolean Register;
+    private TextView textView;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -67,7 +71,7 @@ public class INSFragment extends Fragment implements SensorEventListener {
     public void onResume() {
         super.onResume();
         //вот этот код надо закинуть в метод
-        sensorManager = (SensorManager)  getActivity().getSystemService(Context.SENSOR_SERVICE);
+        /*sensorManager = (SensorManager)  getActivity().getSystemService(Context.SENSOR_SERVICE);
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer,
@@ -88,23 +92,82 @@ public class INSFragment extends Fragment implements SensorEventListener {
             sensorManager.registerListener(this, Rotation,
                     SensorManager.SENSOR_DELAY_GAME);
         }
-        //конец кода.
+        *///конец кода.
+    }
+    public void RegisterListener (boolean register)  {
+        sensorManager = (SensorManager)  getActivity().getSystemService(Context.SENSOR_SERVICE);
+        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        Sensor magn = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        Sensor Rotation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        if (register){
+
+            if (accelerometer != null) {
+                sensorManager.registerListener(this, accelerometer,
+                        SensorManager.SENSOR_DELAY_GAME);
+            }
+            if (gyro != null) {
+                sensorManager.registerListener(this, gyro,
+                        SensorManager.SENSOR_DELAY_GAME);
+            }
+
+            if (gyro != null) {
+                sensorManager.registerListener(this, magn,
+                        SensorManager.SENSOR_DELAY_GAME);
+            }
+            if (gyro != null) {
+                sensorManager.registerListener(this, Rotation,
+                        SensorManager.SENSOR_DELAY_GAME);
+            }
+        }
+        else {
+            sensorManager.unregisterListener(this, accelerometer);
+            sensorManager.unregisterListener(this,gyro);
+            sensorManager.unregisterListener(this, Rotation);
+            sensorManager.unregisterListener(this,magn);
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_i_n_c, container, false);
+        RegisterListener(Register);
+        View newView = inflater.inflate(R.layout.fragment_i_n_c, container, false /* attachToRoot */);
+        textView = (TextView) newView.findViewById(R.id.TextINS);
+      return newView;
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-    }
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER: {
+                textView.append( "ACC " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                        + " " + String.valueOf(event.values[2]));
+                break;
+            }
+            case Sensor.TYPE_GYROSCOPE:{
+                textView.append("GYR " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                        + " " + String.valueOf(event.values[2]));
+                break;
+            }
+            case Sensor.TYPE_MAGNETIC_FIELD:{
+                textView.append("MAG " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                        + " " + String.valueOf(event.values[2]));
+                break;
+            }
+            case Sensor.TYPE_ROTATION_VECTOR:{
+                textView.append("ROT " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                        + " " + String.valueOf(event.values[2])  + " " + String.valueOf(event.values[3] ));
+                break;
+            }
+            }
+        }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
 }
+
