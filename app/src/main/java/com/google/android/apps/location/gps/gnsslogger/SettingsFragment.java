@@ -226,6 +226,25 @@ public class SettingsFragment extends Fragment {
             }
           }
         });
+      final Switch INS = (Switch) view.findViewById(R.id.INS);
+      final TextView turnOnINS = (TextView) view.findViewById(R.id.ON_INS);
+      turnOnAutoScroll.setText("Switch is OFF");
+      INS.setOnCheckedChangeListener(
+              new OnCheckedChangeListener() {
+                  @Override
+                  public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                      SharedPreferences sharedPreferences =
+                              PreferenceManager.getDefaultSharedPreferences(getActivity());
+                      Editor editor = sharedPreferences.edit();
+                      if (isChecked) {
+                          INSFragment.Register = true;
+                          turnOnINS.setText("Switch is ON");
+                      } else {
+                          INSFragment.Register = false;
+                          turnOnINS.setText("Switch is OFF");
+                      }
+                  }
+              });
 
     final Switch residualPlotSwitch = (Switch) view.findViewById(R.id.residual_plot_enabled);
     final TextView turnOnResidual = (TextView) view.findViewById(R.id.turn_on_residual_plot);
@@ -394,4 +413,5 @@ public class SettingsFragment extends Fragment {
     Log.e(GnssContainer.TAG + TAG, errorMessage, e);
     Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
   }
+
 }

@@ -155,10 +155,10 @@ public class MainActivity extends AppCompatActivity
             .registerReceiver(
                     mBroadcastReceiver, new IntentFilter(
                             DetectedActivitiesIntentReceiver.AR_RESULT_BROADCAST_ACTION));
-   /* sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+    sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
     Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     if (accelerometer != null) {
-      sensorManager.registerListener(, accelerometer,
+      sensorManager.registerListener(this, accelerometer,
               SensorManager.SENSOR_DELAY_GAME);
     }
     Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity
     if (gyro != null) {
       sensorManager.registerListener(this, Rotation,
               SensorManager.SENSOR_DELAY_GAME);
-    }*/
+    }
   }
 
   @Override
@@ -255,6 +255,7 @@ public class MainActivity extends AppCompatActivity
 
 
   }
+
 
   protected PendingIntent createActivityDetectionPendingIntent() {
     Intent intent = new Intent(this, DetectedActivitiesIntentReceiver.class);
@@ -443,7 +444,7 @@ public class MainActivity extends AppCompatActivity
       }
       case Sensor.TYPE_ROTATION_VECTOR:
         final String str = "INS:" + "ROT " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + ' ' + String.valueOf(event.values[1])
-                + ' ' + String.valueOf(event.values[2])  + ' ' + String.valueOf(event.values[3]  + ' ' + String.valueOf(event.values[4]));
+                + ' ' + String.valueOf(event.values[2])  + ' ' + String.valueOf(event.values[3] );
         Thread thread = new Thread(new Runnable() {
           @Override
           public void run() {

@@ -167,7 +167,7 @@
       android:orientation="horizontal">
 
     <TextView
-        android:id="@+id/register_location_label2"
+        android:id="@+id/ON_INS"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
@@ -175,13 +175,13 @@
         android:textStyle="bold" />
 
     <Switch
-        android:id="@+id/INC"
+        android:id="@+id/INS"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
         android:layout_weight="1"
         android:singleLine="true"
-        android:text="INC" />
+        android:text="INS" />
 
   </LinearLayout>
 
