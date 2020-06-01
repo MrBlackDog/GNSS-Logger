@@ -1,6 +1,10 @@
 package com.artack.navigation;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -8,9 +12,14 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
+import android.text.Editable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.apps.location.gps.gnsslogger.R;
@@ -30,6 +39,8 @@ public class INSFragment extends Fragment implements SensorEventListener {
     public static Sensor sensor;
     public static boolean Register;
     private TextView textView;
+    private final UiINSResults mUiComponent = new UiINSResults();
+    private ScrollView insScroll;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -135,6 +146,7 @@ public class INSFragment extends Fragment implements SensorEventListener {
         RegisterListener(Register);
         View newView = inflater.inflate(R.layout.fragment_i_n_c, container, false /* attachToRoot */);
         textView = (TextView) newView.findViewById(R.id.TextINS);
+        insScroll = newView.findViewById(R.id.INScroll);
       return newView;
     }
 
@@ -143,23 +155,31 @@ public class INSFragment extends Fragment implements SensorEventListener {
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER: {
-                textView.append( "ACC " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
-                        + " " + String.valueOf(event.values[2]));
+               // textView.append( "ACC " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                //        + " " + String.valueOf(event.values[2])+"\n");
+                mUiComponent.logTextResults("ACC",SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                        + " " + String.valueOf(event.values[2])+"\n", Color.BLACK);
                 break;
             }
             case Sensor.TYPE_GYROSCOPE:{
-                textView.append("GYR " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
-                        + " " + String.valueOf(event.values[2]));
+              //  textView.append("GYR " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                       // + " " + String.valueOf(event.values[2])+"\n");
+                mUiComponent.logTextResults("GYR",SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                         + " " + String.valueOf(event.values[2])+"\n", Color.BLACK);
                 break;
             }
             case Sensor.TYPE_MAGNETIC_FIELD:{
-                textView.append("MAG " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
-                        + " " + String.valueOf(event.values[2]));
+               // textView.append("MAG " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+               //         + " " + String.valueOf(event.values[2])+"\n");
+                mUiComponent.logTextResults("MAG",SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                                + " " + String.valueOf(event.values[2])+"\n", Color.BLACK);
                 break;
             }
             case Sensor.TYPE_ROTATION_VECTOR:{
-                textView.append("ROT " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
-                        + " " + String.valueOf(event.values[2])  + " " + String.valueOf(event.values[3] ));
+              //  textView.append("ROT" + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                    //    + " " + String.valueOf(event.values[2])  + " " + String.valueOf(event.values[3] )+"\n");
+                mUiComponent.logTextResults("ROT",SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                            + " " + String.valueOf(event.values[2])  + " " + String.valueOf(event.values[3] )+"\n", Color.BLACK);
                 break;
             }
             }
@@ -169,5 +189,55 @@ public class INSFragment extends Fragment implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
+    public class UiINSResults {
+
+        private static final int MAX_LENGTH = 12000;
+        private static final int LOWER_THRESHOLD = (int) (MAX_LENGTH * 0.5);
+
+        public synchronized void logTextResults(final String tag, final String text, int color) {
+            final SpannableStringBuilder builder = new SpannableStringBuilder();
+            builder.append(tag).append(" | ").append(text).append("\n");
+            //MainActivity._ws.send("Location:" + tag + text );
+            builder.setSpan(
+                    new ForegroundColorSpan(color),
+                    0 /* start */,
+                    builder.length(),
+                    SpannableStringBuilder.SPAN_INCLUSIVE_EXCLUSIVE);
+
+            Activity activity = getActivity();
+            if (activity == null) {
+                return;
+            }
+            activity.runOnUiThread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            textView.append(builder);
+                            SharedPreferences sharedPreferences = PreferenceManager.
+                                    getDefaultSharedPreferences(getActivity());
+                            Editable editable = textView.getEditableText();
+                            int length = editable.length();
+                            if (length > MAX_LENGTH) {
+                                editable.delete(0, length - LOWER_THRESHOLD);
+                            }
+                            if (sharedPreferences.getBoolean(
+                                    SettingsFragment.PREFERENCE_KEY_AUTO_SCROLL, false /*default return value*/)){
+                                insScroll.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        insScroll.fullScroll(View.FOCUS_DOWN);
+                                    }
+                                });
+                            }
+                        }
+                    });
+        }
+
+        public void startActivity(Intent intent) {
+            getActivity().startActivity(intent);
+        }
+    }
 }
+
+
 

@@ -231,7 +231,7 @@ public class SettingsFragment extends Fragment {
         });
       final Switch INS = (Switch) view.findViewById(R.id.INS);
       final TextView turnOnINS = (TextView) view.findViewById(R.id.ON_INS);
-      turnOnAutoScroll.setText("Switch is OFF");
+      turnOnINS.setText("Switch is OFF");
       INS.setOnCheckedChangeListener(
               new OnCheckedChangeListener() {
                   @Override
