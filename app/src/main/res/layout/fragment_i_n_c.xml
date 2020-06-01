@@ -42,8 +42,7 @@
         <TextView
             android:id="@+id/TextINS"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="TextINS" />
+            android:layout_height="wrap_content"/>
     </ScrollView>
 
     <LinearLayout

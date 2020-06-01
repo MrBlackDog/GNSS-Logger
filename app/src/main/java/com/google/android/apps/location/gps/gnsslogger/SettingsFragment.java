@@ -45,6 +45,9 @@ import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.artack.navigation.INSFragment;
+
 import java.lang.reflect.InvocationTargetException;
 
 /**

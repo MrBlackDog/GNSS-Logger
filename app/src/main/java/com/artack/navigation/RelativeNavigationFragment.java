@@ -127,15 +127,15 @@ public class RelativeNavigationFragment extends Fragment {
                             if (length > MAX_LENGTH) {
                                 editable.delete(0, length - LOWER_THRESHOLD);
                             }
-                            if (sharedPreferences.getBoolean(
-                                    SettingsFragment.PREFERENCE_KEY_AUTO_SCROLL, false /*default return value*/)){
-                                mScrollView.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        mScrollView.fullScroll(View.FOCUS_DOWN);
-                                    }
-                                });
-                            }
+                           // if (sharedPreferences.getBoolean(
+                            //        SettingsFragment.PREFERENCE_KEY_AUTO_SCROLL, false /*default return value*/)){
+                            //    mScrollView.post(new Runnable() {
+                            //        @Override
+                            //        public void run() {
+                            //            mScrollView.fullScroll(View.FOCUS_DOWN);
+                            //        }
+                            //    });
+                           // }
                         }
                     });
         }
