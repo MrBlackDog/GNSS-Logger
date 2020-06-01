@@ -1,4 +1,4 @@
-package com.google.android.apps.location.gps.gnsslogger;
+package com.artack.navigation;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -10,6 +10,8 @@ import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.google.android.apps.location.gps.gnsslogger.R;
 
 /**
  * A simple {@link Fragment} subclass.

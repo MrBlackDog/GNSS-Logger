@@ -38,11 +38,9 @@ import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.os.PersistableBundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.TabLayout.TabLayoutOnPageChangeListener;
 import android.support.v13.app.FragmentPagerAdapter;
@@ -55,6 +53,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.artack.navigation.INSFragment;
+import com.artack.navigation.RealTimeRelativePositionCalculator;
+import com.artack.navigation.RelativeNavigationFragment;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
@@ -101,6 +102,9 @@ public class MainActivity extends AppCompatActivity
   private GnssContainer mGnssContainer;
   private UiLogger mUiLogger;
   private RealTimePositionVelocityCalculator mRealTimePositionVelocityCalculator;
+  //мой класс для расчета относительной навигации
+  private RealTimeRelativePositionCalculator mRealTimeRelativePositionCalculator;
+
   private FileLogger mFileLogger;
   private AgnssUiLogger mAgnssUiLogger;
   private Fragment[] mFragments;
@@ -563,6 +567,7 @@ public class MainActivity extends AppCompatActivity
   private void setupFragments() {
     mUiLogger = new UiLogger();
     mRealTimePositionVelocityCalculator = new RealTimePositionVelocityCalculator();
+    mRealTimeRelativePositionCalculator = new RealTimeRelativePositionCalculator();
     mRealTimePositionVelocityCalculator.setMainActivity(this);
     mRealTimePositionVelocityCalculator.setResidualPlotMode(
         RealTimePositionVelocityCalculator.RESIDUAL_MODE_DISABLED, null /* fixedGroundTruth */);
@@ -575,7 +580,8 @@ public class MainActivity extends AppCompatActivity
             mUiLogger,
             mFileLogger,
             mRealTimePositionVelocityCalculator,
-            mAgnssUiLogger);
+            mAgnssUiLogger,
+            mRealTimeRelativePositionCalculator);
     mFragments = new Fragment[NUMBER_OF_FRAGMENTS];
     SettingsFragment settingsFragment = new SettingsFragment();
     settingsFragment.setGpsContainer(mGnssContainer);

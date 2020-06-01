@@ -8,13 +8,19 @@ import android.location.GnssStatus;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.google.android.apps.location.gps.gnsslogger.GnssContainer;
 import com.google.android.apps.location.gps.gnsslogger.GnssListener;
+import com.google.android.apps.location.gps.gnsslogger.ResultFragment;
 import com.google.location.lbs.gnss.gps.pseudorange.Ecef2LlaConverter;
 import com.google.location.lbs.gnss.gps.pseudorange.GpsTime;
 import com.google.location.lbs.gnss.gps.pseudorange.Lla2EcefConverter;
-
+import com.google.location.lbs.gnss.gps.pseudorange.PseudorangePositionVelocityFromRealTimeEvents;
+import com.artack.navigation.RelativeNavigationFragment.UIRelativeResultComponent;
 import Jama.Matrix;
 import org.apache.commons.math3.linear.RealMatrix;
 
@@ -39,6 +45,10 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
     private long mArrivalTimeSinceGpsEpochNs = 0;
     private long mLargestTowNs = Long.MIN_VALUE;
 
+    private HandlerThread mRelativePositionVelocityCalculationHandlerThread;
+    private Handler mRelativePositionVelocityCalculationHandler;
+    private PseudorangeRelativePositionVelocityFromRealTimeEvents mPseudorangeRelativePositionVelocityFromRealTimeEvents;
+
     GnssMeasurement currentmeasurementBase;
     GnssMeasurement currentmeasurementObject;
     GnssClock currentclockBase;
@@ -48,7 +58,30 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
     RealMatrix HMatrix;
     RealMatrix SolutionMatrix;
 
-    public RealTimeRelativePositionCalculator(GnssMeasurement measurement) {
+    public RealTimeRelativePositionCalculator() {
+        mRelativePositionVelocityCalculationHandlerThread =
+                new HandlerThread("Relative Position From Realtime Pseudoranges");
+        mRelativePositionVelocityCalculationHandlerThread.start();
+        mRelativePositionVelocityCalculationHandler =
+                new Handler(mRelativePositionVelocityCalculationHandlerThread.getLooper());
+
+        final Runnable r =
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            mPseudorangeRelativePositionVelocityFromRealTimeEvents =
+                                    new PseudorangeRelativePositionVelocityFromRealTimeEvents();
+                        } catch (Exception e) {
+                            Log.e(
+                                    GnssContainer.TAG,
+                                    " Exception in constructing PseudorangeRelativePositionFromRealTimeEvents : ",
+                                    e);
+                        }
+                    }
+                };
+
+        mRelativePositionVelocityCalculationHandler.post(r);
     }
     /** Iterative WLS method for relative navigation solution*/
     public void WLSSolution()
@@ -67,6 +100,7 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
         mReferenceLocation[2] = alt;
         Ecef2LlaConverter.GeodeticLlaValues geodeticLlaValues = new Ecef2LlaConverter.GeodeticLlaValues(lat,lng,alt);
         mReferenceLocationECEF = Lla2EcefConverter.convertFromLlaToEcefMeters(geodeticLlaValues);
+        //тут не работает
         Log.e("RefLocation:",String.valueOf(mReferenceLocationECEF[0]) +" " +
                 String.valueOf(mReferenceLocationECEF[1])+ " " +
                 String.valueOf(mReferenceLocationECEF[2]));
@@ -96,35 +130,8 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
     /**тут надо замутить магию */
     @Override
     public void onGnssMeasurementsReceived(GnssMeasurementsEvent event) {
-        GnssClock gnssClock = event.getClock();
-        mArrivalTimeSinceGpsEpochNs = gnssClock.getTimeNanos() - gnssClock.getFullBiasNanos();
+        //возможно стоит все передавать в отедльный класс для отрешивания.
 
-        for (GnssMeasurement measurement : event.getMeasurements()) {
-            // ignore any measurement if it is not from GPS constellation
-            if (measurement.getConstellationType() != GnssStatus.CONSTELLATION_GPS) {
-                continue;
-            }
-            // ignore raw data if time is zero, if signal to noise ratio is below threshold or if
-            // TOW is not yet decoded
-            if (measurement.getCn0DbHz() >= C_TO_N0_THRESHOLD_DB_HZ
-                    && (measurement.getState() & (1L << TOW_DECODED_MEASUREMENT_STATE_BIT)) != 0) {
-
-                // calculate day of year and Gps week number needed for the least square
-                GpsTime gpsTime = new GpsTime(mArrivalTimeSinceGpsEpochNs);
-                // Gps weekly epoch in Nanoseconds: defined as of every Sunday night at 00:00:000
-                long gpsWeekEpochNs = GpsTime.getGpsWeekEpochNano(gpsTime);
-                mArrivalTimeSinceGPSWeekNs = mArrivalTimeSinceGpsEpochNs - gpsWeekEpochNs;
-                mGpsWeekNumber = gpsTime.getGpsWeekSecond().first;
-                // calculate day of the year between 1 and 366
-                Calendar cal = gpsTime.getTimeInCalendar();
-                mDayOfYear1To366 = cal.get(Calendar.DAY_OF_YEAR);
-
-                long receivedGPSTowNs = measurement.getReceivedSvTimeNanos();
-                if (receivedGPSTowNs > mLargestTowNs) {
-                    mLargestTowNs = receivedGPSTowNs;
-                }
-            }
-        }
     }
 
     @Override
@@ -155,4 +162,25 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
     public void onTTFFReceived(long l) {
     }
 
+    public double[] getReferenceLocationECEF() {
+        return mReferenceLocationECEF;
+    }
+    public void postToast(String mes)
+    {
+     /*   Toast.makeText(getContext(),realTimeRelativePositionCalculator.positionSolutionECEF[0] + " "+
+                        realTimeRelativePositionCalculator.positionSolutionECEF[1] + " "+
+                        realTimeRelativePositionCalculator.positionSolutionECEF[2] + " "
+                ,Toast.LENGTH_SHORT).show();*/
+    }
+
+    /**UI для вывода результатов*/
+    private UIRelativeResultComponent uiResultComponent;
+
+    public synchronized UIRelativeResultComponent getUiResultComponent() {
+        return uiResultComponent;
+    }
+
+    public synchronized void setUiResultComponent(UIRelativeResultComponent value) {
+        uiResultComponent = value;
+    }
 }
