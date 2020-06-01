@@ -61,7 +61,7 @@ public class SettingsFragment extends Fragment {
   private static int AUTO_GROUND_TRUTH_MODE = 3;
 
   /** Key in the {@link SharedPreferences} indicating whether auto-scroll has been enabled */
-  protected static String PREFERENCE_KEY_AUTO_SCROLL =  "autoScroll";
+  public static String PREFERENCE_KEY_AUTO_SCROLL =  "autoScroll";
 
   private GnssContainer mGpsContainer;
   private HelpDialog helpDialog;

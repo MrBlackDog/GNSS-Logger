@@ -71,12 +71,11 @@ public class RelativeNavigationFragment extends Fragment {
         }
     }
 
-    public void postToast(String mes)
-    {
-        Toast.makeText(getContext(),realTimeRelativePositionCalculator.positionSolutionECEF[0] + " "+
-                        realTimeRelativePositionCalculator.positionSolutionECEF[1] + " "+
+    public void postToast(String mes) {
+        Toast.makeText(getContext(), realTimeRelativePositionCalculator.positionSolutionECEF[0] + " " +
+                        realTimeRelativePositionCalculator.positionSolutionECEF[1] + " " +
                         realTimeRelativePositionCalculator.positionSolutionECEF[2] + " "
-                ,Toast.LENGTH_SHORT).show();
+                , Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -91,8 +90,9 @@ public class RelativeNavigationFragment extends Fragment {
             realTimeRelativePositionCalculator.setUiResultComponent(mUiComponent);
         }
         return newView;
-       // return inflater.inflate(R.layout.fragment_r_n, container, false);
+        // return inflater.inflate(R.layout.fragment_r_n, container, false);
     }
+
     /**
      * A facade for UI and Activity related operations that are required for {@link GnssListener}s.
      */
@@ -127,15 +127,15 @@ public class RelativeNavigationFragment extends Fragment {
                             if (length > MAX_LENGTH) {
                                 editable.delete(0, length - LOWER_THRESHOLD);
                             }
-                           // if (sharedPreferences.getBoolean(
-                            //        SettingsFragment.PREFERENCE_KEY_AUTO_SCROLL, false /*default return value*/)){
-                            //    mScrollView.post(new Runnable() {
-                            //        @Override
-                            //        public void run() {
-                            //            mScrollView.fullScroll(View.FOCUS_DOWN);
-                            //        }
-                            //    });
-                           // }
+                            if (sharedPreferences.getBoolean(
+                                    SettingsFragment.PREFERENCE_KEY_AUTO_SCROLL, false /*default return value*/)) {
+                                mScrollView.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mScrollView.fullScroll(View.FOCUS_DOWN);
+                                    }
+                                });
+                            }
                         }
                     });
         }

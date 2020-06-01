@@ -23,6 +23,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.apps.location.gps.gnsslogger.R;
+import com.google.android.apps.location.gps.gnsslogger.SettingsFragment;
 
 /**
  * A simple {@link Fragment} subclass.
