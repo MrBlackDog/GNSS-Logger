@@ -19,11 +19,15 @@ import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.apps.location.gps.gnsslogger.R;
 import com.google.android.apps.location.gps.gnsslogger.SettingsFragment;
+
+import java.io.BufferedWriter;
+import java.io.File;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -42,6 +46,10 @@ public class INSFragment extends Fragment implements SensorEventListener {
     private TextView textView;
     private final UiINSResults mUiComponent = new UiINSResults();
     private ScrollView insScroll;
+    private Button mStartLog;
+    private Button mTimer;
+    private Button mSendFile;
+    private TextView mTimerDisplay;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -106,6 +114,8 @@ public class INSFragment extends Fragment implements SensorEventListener {
         }
         *///конец кода.
     }
+
+
     public void RegisterListener (boolean register)  {
         sensorManager = (SensorManager)  getActivity().getSystemService(Context.SENSOR_SERVICE);
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -148,6 +158,10 @@ public class INSFragment extends Fragment implements SensorEventListener {
         View newView = inflater.inflate(R.layout.fragment_i_n_c, container, false /* attachToRoot */);
         textView = (TextView) newView.findViewById(R.id.TextINS);
         insScroll = newView.findViewById(R.id.INScroll);
+        mTimerDisplay = (TextView) newView.findViewById(R.id.ins_timer);
+        mTimer = (Button) newView.findViewById(R.id.start_timer);
+        mStartLog = (Button) newView.findViewById(R.id.start_logs);
+        mSendFile = (Button) newView.findViewById(R.id.send_log);
       return newView;
     }
 
