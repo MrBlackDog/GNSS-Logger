@@ -254,6 +254,7 @@ public class MainActivity extends AppCompatActivity
     setContentView(R.layout.activity_main);
     buildGoogleApiClient();
     Connect();
+
     requestPermissionAndSetupFragments(this);
 
   }
@@ -321,7 +322,7 @@ public class MainActivity extends AppCompatActivity
         Thread thread = new Thread(new Runnable() {
           @Override
           public void run() {
-            MainActivity._ws.send(str);
+            //MainActivity._ws.send(str);
           }
         });
         thread.start();
@@ -409,7 +410,7 @@ public class MainActivity extends AppCompatActivity
         Thread thread = new Thread(new Runnable() {
           @Override
           public void run() {
-            MainActivity._ws.send(str);
+          //  MainActivity._ws.send(str);
           }
         });
         thread.start();
@@ -429,7 +430,7 @@ public class MainActivity extends AppCompatActivity
         Thread thread = new Thread(new Runnable() {
           @Override
           public void run() {
-            MainActivity._ws.send(str);
+            //MainActivity._ws.send(str);
           }
         });
         thread.start();
@@ -450,7 +451,7 @@ public class MainActivity extends AppCompatActivity
         Thread thread = new Thread(new Runnable() {
           @Override
           public void run() {
-            MainActivity._ws.send(str);
+            //MainActivity._ws.send(str);
           }
         });
         thread.start();

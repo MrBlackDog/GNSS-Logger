@@ -102,7 +102,7 @@ public class UiLogger implements GnssListener
   @Override
   public void onLocationChanged(Location location) {
     logLocationEvent("onLocationChanged: " + location + "\n");
-    MainActivity._ws.send("Location:" + location.getLatitude() + " " + location.getLongitude() + " " + location.getAltitude());
+   // MainActivity._ws.send("Location:" + location.getLatitude() + " " + location.getLongitude() + " " + location.getAltitude());
   }
 
   @Override
@@ -180,7 +180,7 @@ public class UiLogger implements GnssListener
                               ? measurement.getAutomaticGainControlLevelDb()
                               : "",
                       measurement.hasCarrierFrequencyHz() ? measurement.getCarrierFrequencyHz() : "");
-    MainActivity._ws.send("GnssMeasurement:" + clockStream + measurementStream);
+  //  MainActivity._ws.send("GnssMeasurement:" + clockStream + measurementStream);
   //  }
   }
 
@@ -254,7 +254,8 @@ public class UiLogger implements GnssListener
                     format,
                     "HardwareClockDiscontinuityCount",
                     gnssClock.getHardwareClockDiscontinuityCount()));
-
+    //отправка на сервак
+    /*
     final String str = "GNSSClock:" +
             //gnssClock.getLeapSecond() + " " +
             gnssClock.getTimeNanos() + " " +
@@ -272,6 +273,7 @@ public class UiLogger implements GnssListener
       }
     });
     thread.start();
+    */
     return builder.toString();
   }
 

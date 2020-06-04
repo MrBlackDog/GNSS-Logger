@@ -3,13 +3,21 @@ package com.artack.navigation;
 import android.location.GnssClock;
 import android.location.GnssMeasurement;
 import android.location.GnssMeasurementsEvent;
+import android.location.GnssNavigationMessage;
 import android.location.GnssStatus;
+import android.location.cts.nano.Ephemeris;
 
+import com.google.location.lbs.gnss.gps.pseudorange.GpsNavigationMessageStore;
 import com.google.location.lbs.gnss.gps.pseudorange.GpsTime;
 
 import java.util.Calendar;
 
 public class PseudorangeRelativePositionVelocityFromRealTimeEvents {
+
+    private Ephemeris.GpsNavMessageProto mHardwareGpsNavMessageProto = null;
+
+    // navigation message parser
+    private GpsNavigationMessageStore mGpsNavigationMessageStore = new GpsNavigationMessageStore();
 
     /** Constants*/
     private static final double SPEED_OF_LIGHT_MPS = 299792458.0;
@@ -18,7 +26,7 @@ public class PseudorangeRelativePositionVelocityFromRealTimeEvents {
     private static final int C_TO_N0_THRESHOLD_DB_HZ = 18;
     private static final int TOW_DECODED_MEASUREMENT_STATE_BIT = 3;
 
-    private double[] mReferenceLocation = null;
+    private int [] mReferenceLocationLLA = null;
     private double[] mReferenceLocationECEF = null;
     /**связаны с расчетом*/
     private double mArrivalTimeSinceGPSWeekNs = 0.0;
@@ -61,4 +69,32 @@ public class PseudorangeRelativePositionVelocityFromRealTimeEvents {
         }
     }
 
+    /** Sets a rough location of the receiver that can be used to request SUPL assistance data */
+    public void setReferencePosition(int latE7, int lngE7, int altE7) {
+        if (mReferenceLocationLLA == null) {
+            mReferenceLocationLLA = new int[3];
+        }
+        mReferenceLocationLLA[0] = latE7;
+        mReferenceLocationLLA[1] = lngE7;
+        mReferenceLocationLLA[2] = altE7;
+    }
+
+    /**
+     * Parses a string array containing an updates to the navigation message and return the most
+     * recent {@link Ephemeris.GpsNavMessageProto}.
+     */
+    public void parseHwNavigationMessageUpdates(GnssNavigationMessage navigationMessage) {
+        byte messagePrn = (byte) navigationMessage.getSvid();
+        byte messageType = (byte) (navigationMessage.getType() >> 8);
+        int subMessageId = navigationMessage.getSubmessageId();
+
+        byte[] messageRawData = navigationMessage.getData();
+        // parse only GPS navigation messages for now
+        if (messageType == 1) {
+            mGpsNavigationMessageStore.onNavMessageReported(
+                    messagePrn, messageType, (short) subMessageId, messageRawData);
+            mHardwareGpsNavMessageProto = mGpsNavigationMessageStore.createDecodedNavMessage();
+        }
+
+    }
 }

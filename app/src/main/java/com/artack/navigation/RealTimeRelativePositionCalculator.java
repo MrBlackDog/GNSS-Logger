@@ -15,8 +15,12 @@ import android.widget.Toast;
 
 import com.google.android.apps.location.gps.gnsslogger.GnssContainer;
 import com.google.android.apps.location.gps.gnsslogger.GnssListener;
+import com.google.android.apps.location.gps.gnsslogger.MainActivity;
 import com.google.android.apps.location.gps.gnsslogger.ResultFragment;
+import com.google.android.apps.location.gps.gnsslogger.WebSocketGolos;
 import com.google.location.lbs.gnss.gps.pseudorange.Ecef2LlaConverter;
+import com.google.location.lbs.gnss.gps.pseudorange.GpsMathOperations;
+import com.google.location.lbs.gnss.gps.pseudorange.GpsNavigationMessageStore;
 import com.google.location.lbs.gnss.gps.pseudorange.GpsTime;
 import com.google.location.lbs.gnss.gps.pseudorange.Lla2EcefConverter;
 import com.google.location.lbs.gnss.gps.pseudorange.PseudorangePositionVelocityFromRealTimeEvents;
@@ -24,41 +28,30 @@ import com.artack.navigation.RelativeNavigationFragment.UIRelativeResultComponen
 import Jama.Matrix;
 import org.apache.commons.math3.linear.RealMatrix;
 
+import java.text.DecimalFormat;
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 public class RealTimeRelativePositionCalculator implements GnssListener {
 
-
-    /** Constants*/
-    private static final double SPEED_OF_LIGHT_MPS = 299792458.0;
-    private static final int SECONDS_IN_WEEK = 604800;
-    private static final double LEAST_SQUARE_TOLERANCE_METERS = 4.0e-8;
-    private static final int C_TO_N0_THRESHOLD_DB_HZ = 18;
-    private static final int TOW_DECODED_MEASUREMENT_STATE_BIT = 3;
-
-    private double[] mReferenceLocation = null;
+     private double[] mReferenceLocation = null;
     private double[] mReferenceLocationECEF = null;
-    /**связаны с расчетом*/
-    private double mArrivalTimeSinceGPSWeekNs = 0.0;
-    private int mDayOfYear1To366 = 0;
-    private int mGpsWeekNumber = 0;
-    private long mArrivalTimeSinceGpsEpochNs = 0;
-    private long mLargestTowNs = Long.MIN_VALUE;
 
     private HandlerThread mRelativePositionVelocityCalculationHandlerThread;
     private Handler mRelativePositionVelocityCalculationHandler;
+    // класс для расчета дальностей и прочего
     private PseudorangeRelativePositionVelocityFromRealTimeEvents mPseudorangeRelativePositionVelocityFromRealTimeEvents;
-
-    GnssMeasurement currentmeasurementBase;
-    GnssMeasurement currentmeasurementObject;
-    GnssClock currentclockBase;
-    GnssClock currentclockObject;
+    public GnssMeasurement targetMeasurement;
     double[] positionSolutionECEF;
-    Matrix GradientMatrix;//Used Jama matrix class
-    RealMatrix HMatrix;
-    RealMatrix SolutionMatrix;
+    private String Xd;
+    private String state = "Target";
+
+    public String getState() {
+        return state;
+    }
 
     public RealTimeRelativePositionCalculator() {
+        WebSocketGolos.getMeasurementsCallBack = this::setTargetMeasurement;
         mRelativePositionVelocityCalculationHandlerThread =
                 new HandlerThread("Relative Position From Realtime Pseudoranges");
         mRelativePositionVelocityCalculationHandlerThread.start();
@@ -82,11 +75,6 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
                 };
 
         mRelativePositionVelocityCalculationHandler.post(r);
-    }
-    /** Iterative WLS method for relative navigation solution*/
-    public void WLSSolution()
-    {
-
     }
 
     /** Sets a rough location of the receiver that can be used to request SUPL assistance data */
@@ -116,10 +104,34 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
 
     /**Отсюда можно получить первое решение, для получения хорошего начального приближения*/
     @Override
-    public void onLocationChanged(Location location) {
-        if (location.getProvider().equals(LocationManager.GPS_PROVIDER)){
-            if(mReferenceLocationECEF == null)
-            setReferencePosition(location.getLatitude(),location.getLongitude(),location.getAltitude());
+    public void onLocationChanged(final Location location) {
+        if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)) {
+            final Runnable r =
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mPseudorangeRelativePositionVelocityFromRealTimeEvents == null) {
+                                return;
+                            }
+                            try {
+                                mPseudorangeRelativePositionVelocityFromRealTimeEvents.setReferencePosition(
+                                        (int) (location.getLatitude() * 1E7),
+                                        (int) (location.getLongitude() * 1E7),
+                                        (int) (location.getAltitude() * 1E7));
+                            } catch (Exception e) {
+                                Log.e(GnssContainer.TAG, " Exception setting reference location : ", e);
+                            }
+                        }
+                    };
+
+            mRelativePositionVelocityCalculationHandler.post(r);
+        }
+        if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
+            if (mReferenceLocationECEF == null)
+                setReferencePosition(
+                        (int) (location.getLatitude() * 1E7),
+                        (int) (location.getLongitude() * 1E7),
+                        (int) (location.getAltitude() * 1E7));
         }
     }
 
@@ -129,17 +141,183 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
 
     /**тут надо замутить магию */
     @Override
-    public void onGnssMeasurementsReceived(GnssMeasurementsEvent event) {
+    public void onGnssMeasurementsReceived(final GnssMeasurementsEvent event) {
         //возможно стоит все передавать в отедльный класс для отрешивания.
+        final Runnable r =
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mPseudorangeRelativePositionVelocityFromRealTimeEvents == null) {
+                            return;
+                        }
+                        try {
+                            if(state.equals("Target"))
+                            {
+                                for (GnssMeasurement measurement : event.getMeasurements())
+                                {
+                                    final String format = "   %-4s = %s\n";
+                                    final StringBuilder builder = new StringBuilder();
+                                    if (measurement.getConstellationType() == GnssStatus.CONSTELLATION_GPS ) {
+                                        builder.append("GnssMeasurement \n");
 
+                                        DecimalFormat numberFormat = new DecimalFormat("#0.000");
+                                        DecimalFormat numberFormat1 = new DecimalFormat("#0.000E00");
+
+                                        builder.append(String.format(format, "Svid", measurement.getSvid()));
+                                        builder.append(String.format(format, "ConstellationType", measurement.getConstellationType()));
+                                        builder.append(String.format(format, "TimeOffsetNanos", measurement.getTimeOffsetNanos()));
+
+                                        builder.append(String.format(format, "State", measurement.getState()));
+
+                                        builder.append(
+                                                String.format(format, "ReceivedSvTimeNanos", measurement.getReceivedSvTimeNanos()));
+                                        builder.append(
+                                                String.format(
+                                                        format,
+                                                        "ReceivedSvTimeUncertaintyNanos",
+                                                        measurement.getReceivedSvTimeUncertaintyNanos()));
+
+                                        builder.append(String.format(format, "Cn0DbHz", numberFormat.format(measurement.getCn0DbHz())));
+
+                                        builder.append(
+                                                String.format(
+                                                        format,
+                                                        "PseudorangeRateMetersPerSecond",
+                                                        numberFormat.format(measurement.getPseudorangeRateMetersPerSecond())));
+                                        builder.append(
+                                                String.format(
+                                                        format,
+                                                        "PseudorangeRateUncertaintyMetersPerSeconds",
+                                                        numberFormat.format(measurement.getPseudorangeRateUncertaintyMetersPerSecond())));
+
+                                        if (measurement.getAccumulatedDeltaRangeState() != 0) {
+                                            builder.append(
+                                                    String.format(
+                                                            format, "AccumulatedDeltaRangeState", measurement.getAccumulatedDeltaRangeState()));
+
+                                            builder.append(
+                                                    String.format(
+                                                            format,
+                                                            "AccumulatedDeltaRangeMeters",
+                                                            numberFormat.format(measurement.getAccumulatedDeltaRangeMeters())));
+                                            builder.append(
+                                                    String.format(
+                                                            format,
+                                                            "AccumulatedDeltaRangeUncertaintyMeters",
+                                                            numberFormat1.format(measurement.getAccumulatedDeltaRangeUncertaintyMeters())));
+                                        }
+
+                                        if (measurement.hasCarrierFrequencyHz()) {
+                                            builder.append(
+                                                    String.format(format, "CarrierFrequencyHz", measurement.getCarrierFrequencyHz()));
+                                        }
+
+                                        if (measurement.hasCarrierCycles()) {
+                                            builder.append(String.format(format, "CarrierCycles", measurement.getCarrierCycles()));
+                                        }
+
+                                        if (measurement.hasCarrierPhase()) {
+                                            builder.append(String.format(format, "CarrierPhase", measurement.getCarrierPhase()));
+                                        }
+
+                                        if (measurement.hasCarrierPhaseUncertainty()) {
+                                            builder.append(
+                                                    String.format(
+                                                            format, "CarrierPhaseUncertainty", measurement.getCarrierPhaseUncertainty()));
+                                        }
+
+                                        builder.append(
+                                                String.format(format, "MultipathIndicator", measurement.getMultipathIndicator()));
+
+                                        if (measurement.hasSnrInDb()) {
+                                            builder.append(String.format(format, "SnrInDb", measurement.getSnrInDb()));
+                                        }
+
+                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                            if (measurement.hasAutomaticGainControlLevelDb()) {
+                                                builder.append(
+                                                        String.format(format, "AgcDb", measurement.getAutomaticGainControlLevelDb()));
+                                            }
+                                            if (measurement.hasCarrierFrequencyHz()) {
+                                                builder.append(String.format(format, "CarrierFreqHz", measurement.getCarrierFrequencyHz()));
+                                            }
+                                        }
+                                    }
+                                    MainActivity._ws.send("Diff:Target " + builder.toString());
+                                }
+
+                            }
+
+                            /** пока не знаю, стоит ли оставлять это условие и что с ним делать */
+                           /* if (mResidualPlotStatus != RESIDUAL_MODE_DISABLED
+                                    && mResidualPlotStatus != RESIDUAL_MODE_AT_INPUT_LOCATION) {
+                                // The position at last epoch is used for the residual analysis.
+                                // This is happening by updating the ground truth for pseudorange before using the
+                                // new arriving pseudoranges to compute a new position.
+                                mPseudorangeRelativePositionVelocityFromRealTimeEvents
+                                        .setCorrectedResidualComputationTruthLocationLla(mGroundTruth);
+                            }*/
+                           /** сюда ещё надо прикурить измерения с опорника */
+                            mPseudorangeRelativePositionVelocityFromRealTimeEvents
+                                    .computePositionVelocitySolutionsFromRawMeas(event);
+                            /**вообще хз че это, лень думать */
+                            // Running on main thread instead of in parallel will improve the thread safety
+                         /*   if (mResidualPlotStatus != RESIDUAL_MODE_DISABLED) {
+                                mMainActivity.runOnUiThread(
+                                        new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                mPlotFragment.updatePseudorangeResidualTab(
+                                                        mPseudorangePositionVelocityFromRealTimeEvents
+                                                                .getPseudorangeResidualsMeters(),
+                                                        TimeUnit.NANOSECONDS.toSeconds(
+                                                                event.getClock().getTimeNanos()));
+                                            }
+                                        }
+                                );
+                            }*/
+                            /**вообще хз че это, лень думать */
+                            /*else {
+                                mMainActivity.runOnUiThread(
+                                        new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                // Here we create gaps when the residual plot is disabled
+                                                mPlotFragment.updatePseudorangeResidualTab(
+                                                        GpsMathOperations.createAndFillArray(
+                                                                GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN),
+                                                        TimeUnit.NANOSECONDS.toSeconds(
+                                                                event.getClock().getTimeNanos()));
+                                            }
+                                        }
+                                );
+                            }*/
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+        mRelativePositionVelocityCalculationHandler.post(r);
+
+    }
+
+    public void setTargetMeasurement(String string) {
+
+        this.Xd = string;
+        Log.d("CallBack",Xd);
+        //this.targetMeasurement = targetMeasurement;
     }
 
     @Override
     public void onGnssMeasurementsStatusChanged(int status) {
     }
 
+    /**получает навигационное сообщение, чтобы достать эфимериды */
     @Override
     public void onGnssNavigationMessageReceived(GnssNavigationMessage event) {
+        if (event.getType() == GnssNavigationMessage.TYPE_GPS_L1CA) {
+            mPseudorangeRelativePositionVelocityFromRealTimeEvents.parseHwNavigationMessageUpdates(event);
+        }
     }
 
     @Override
