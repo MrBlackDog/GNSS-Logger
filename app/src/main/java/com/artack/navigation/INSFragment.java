@@ -1,8 +1,10 @@
 package com.artack.navigation;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.Sensor;
@@ -11,6 +13,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.text.Editable;
@@ -22,9 +25,16 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.apps.location.gps.gnsslogger.FileLogger;
+import com.google.android.apps.location.gps.gnsslogger.LoggerFragment;
 import com.google.android.apps.location.gps.gnsslogger.R;
 import com.google.android.apps.location.gps.gnsslogger.SettingsFragment;
+import com.google.android.apps.location.gps.gnsslogger.TimerFragment;
+import com.google.android.apps.location.gps.gnsslogger.TimerService;
+import com.google.android.apps.location.gps.gnsslogger.TimerValues;
+import com.google.android.apps.location.gps.gnsslogger.UiLogger;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -40,6 +50,7 @@ public class INSFragment extends Fragment implements SensorEventListener {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    private static final String TIMER_FRAGMENT_TAG ="timer";
     public static SensorManager sensorManager;
     public static Sensor sensor;
     public static boolean Register;
@@ -50,6 +61,58 @@ public class INSFragment extends Fragment implements SensorEventListener {
     private Button mTimer;
     private Button mSendFile;
     private TextView mTimerDisplay;
+    private TextView mLogView;
+    private ScrollView mScrollView;
+    private UiLogger mUiLogger;
+    private FileLogger mFileLogger;
+    private final UiINSResults mUiComponents = new UiINSResults();
+    private void launchTimerDialog() {
+        TimerFragment timer = new TimerFragment();
+        timer.setTargetFragment(this, 0);
+        timer.setArguments(mTimerValues.toBundle());
+        timer.show(getFragmentManager(), TIMER_FRAGMENT_TAG);
+    }
+    private TimerValues mTimerValues =
+            new TimerValues(0 /* hours */, 0 /* minutes */, 0 /* seconds */);
+    void stopAndSend() {
+        if (mTimer != null) {
+            mTimerService.stopTimer();
+        }
+        enableOptions(true /* start */);
+        Toast.makeText(getContext(), R.string.stop_message, Toast.LENGTH_LONG).show();
+        displayTimer(mTimerValues, false /* countdownStyle */);
+        mFileLogger.send();
+    }
+    private void enableOptions(boolean start) {
+        mTimer.setEnabled(start);
+        mStartLog.setEnabled(start);
+        mSendFile.setEnabled(!start);
+    }
+    void displayTimer(TimerValues values, boolean countdownStyle) {
+        String content;
+
+        if (countdownStyle) {
+            content = values.toCountdownString();
+        } else {
+            content = values.toString();
+        }
+
+        mTimerDisplay.setText(
+                String.format("%s: %s", getResources().getString(R.string.timer_display), content));
+    }
+    private ServiceConnection mConnection =
+            new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName className, IBinder serviceBinder) {
+                    mTimerService = ((TimerService.TimerBinder) serviceBinder).getService();
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName className) {
+                    mTimerService = null;
+                }
+            };
+    private TimerService mTimerService;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -156,14 +219,93 @@ public class INSFragment extends Fragment implements SensorEventListener {
         // Inflate the layout for this fragment
         RegisterListener(Register);
         View newView = inflater.inflate(R.layout.fragment_i_n_c, container, false /* attachToRoot */);
-        textView = (TextView) newView.findViewById(R.id.TextINS);
-        insScroll = newView.findViewById(R.id.INScroll);
-        mTimerDisplay = (TextView) newView.findViewById(R.id.ins_timer);
-        mTimer = (Button) newView.findViewById(R.id.start_timer);
-        mStartLog = (Button) newView.findViewById(R.id.start_logs);
-        mSendFile = (Button) newView.findViewById(R.id.send_log);
-      return newView;
-    }
+
+            mLogView = (TextView) newView.findViewById(R.id.TextINS);
+            mScrollView = (ScrollView) newView.findViewById(R.id.INScroll);
+
+            getActivity()
+                    .bindService(
+                            new Intent(getActivity(), TimerService.class), mConnection, Context.BIND_AUTO_CREATE);
+
+            UiLogger currentUiLogger = mUiLogger;
+            if (currentUiLogger != null) {
+                currentUiLogger.setUiINSResults(mUiComponents);
+            }
+            FileLogger currentFileLogger = mFileLogger;
+            if (currentFileLogger != null) {
+                currentFileLogger.setUiComponents(mUiComponents);
+            }
+
+            Button start = (Button) newView.findViewById(R.id.start_logs);
+            Button end = (Button) newView.findViewById(R.id.end_log);
+            Button clear = (Button) newView.findViewById(R.id.clear_log);
+
+            start.setOnClickListener(
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            mScrollView.fullScroll(View.FOCUS_UP);
+                        }
+                    });
+
+            end.setOnClickListener(
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            mScrollView.fullScroll(View.FOCUS_DOWN);
+                        }
+                    });
+
+            clear.setOnClickListener(
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            mLogView.setText("");
+                        }
+                    });
+
+            mTimerDisplay = (TextView) newView.findViewById(R.id.ins_timer);
+            mTimer = (Button) newView.findViewById(R.id.start_timer);
+            mStartLog = (Button) newView.findViewById(R.id.start_log_ins);
+            mSendFile = (Button) newView.findViewById(R.id.send_log);
+
+            displayTimer(mTimerValues, false /* countdownStyle */);
+            enableOptions(true /* start */);
+
+            mStartLog.setOnClickListener(
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            enableOptions(false /* start */);
+                            Toast.makeText(getContext(), R.string.start_message, Toast.LENGTH_LONG).show();
+                            mFileLogger.startNewLog();
+
+                            if (!mTimerValues.isZero() && (mTimerService != null)) {
+                                mTimerService.startTimer();
+                            }
+                        }
+                    });
+
+            mSendFile.setOnClickListener(
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            stopAndSend();
+                        }
+                    });
+
+            mTimer.setOnClickListener(
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            launchTimerDialog();
+                        }
+                    });
+
+            return newView;
+        }
+
+
 
     @Override
     public void onSensorChanged(SensorEvent event) {

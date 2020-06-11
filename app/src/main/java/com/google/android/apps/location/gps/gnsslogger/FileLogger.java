@@ -37,6 +37,8 @@ import android.support.v4.BuildConfig;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.artack.navigation.INSFragment;
 import com.google.android.apps.location.gps.gnsslogger.LoggerFragment.UIFragmentComponent;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -71,6 +73,7 @@ public class FileLogger implements GnssListener, SensorEventListener {
   private File mFile;
 
   private UIFragmentComponent mUiComponent;
+  private INSFragment.UiINSResults mUiComponents;
 
   public synchronized UIFragmentComponent getUiComponent() {
     return mUiComponent;
@@ -78,6 +81,9 @@ public class FileLogger implements GnssListener, SensorEventListener {
 
   public synchronized void setUiComponent(UIFragmentComponent value) {
     mUiComponent = value;
+  }
+  public synchronized void setUiComponents(INSFragment.UiINSResults value) {
+    mUiComponents = value;
   }
 
   public FileLogger(Context context) {
