@@ -44,7 +44,7 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
     public GnssMeasurement targetMeasurement;
     double[] positionSolutionECEF;
     private String Xd;
-    private String state = "Target";
+    private String state = "Base";
 
     public String getState() {
         return state;
@@ -243,7 +243,7 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
                                             }
                                         }
                                     }
-                                    MainActivity._ws.send("Diff:Target " + builder.toString());
+                                    MainActivity._ws.send("Diff:"+ builder.toString());
                                 }
 
                             }
@@ -257,7 +257,7 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
                                 mPseudorangeRelativePositionVelocityFromRealTimeEvents
                                         .setCorrectedResidualComputationTruthLocationLla(mGroundTruth);
                             }*/
-                           /** сюда ещё надо прикурить измерения с опорника */
+                           /** сюда ещё надо прикурить измерения с целевого приемника,так как отрешиваемся на базе*/
                             mPseudorangeRelativePositionVelocityFromRealTimeEvents
                                     .computePositionVelocitySolutionsFromRawMeas(event);
                             /**вообще хз че это, лень думать */
