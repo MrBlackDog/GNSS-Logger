@@ -37,7 +37,8 @@
     <ScrollView
         android:id="@+id/INScroll"
         android:layout_width="match_parent"
-        android:layout_height="615dp">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <TextView
             android:id="@+id/TextINS"

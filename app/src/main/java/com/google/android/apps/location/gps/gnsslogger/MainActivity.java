@@ -53,6 +53,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.artack.navigation.INSFileLogger;
 import com.artack.navigation.INSFragment;
 import com.artack.navigation.RealTimeRelativePositionCalculator;
 import com.artack.navigation.RelativeNavigationFragment;
@@ -106,6 +107,7 @@ public class MainActivity extends AppCompatActivity
   private RealTimeRelativePositionCalculator mRealTimeRelativePositionCalculator;
 
   private FileLogger mFileLogger;
+  private INSFileLogger mINSFileLogger;
   private AgnssUiLogger mAgnssUiLogger;
   private Fragment[] mFragments;
   private GoogleApiClient mGoogleApiClient;
@@ -162,22 +164,22 @@ public class MainActivity extends AppCompatActivity
     sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
     Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     if (accelerometer != null) {
-      sensorManager.registerListener(this, accelerometer,
+      sensorManager.registerListener(mINSFileLogger, accelerometer,
               SensorManager.SENSOR_DELAY_GAME);
     }
     Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
     if (gyro != null) {
-      sensorManager.registerListener(this, gyro,
+      sensorManager.registerListener(mINSFileLogger, gyro,
               SensorManager.SENSOR_DELAY_GAME);
     }
     Sensor magn = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
     if (gyro != null) {
-      sensorManager.registerListener(this, magn,
+      sensorManager.registerListener(mINSFileLogger, magn,
               SensorManager.SENSOR_DELAY_GAME);
     }
     Sensor Rotation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
     if (gyro != null) {
-      sensorManager.registerListener(this, Rotation,
+      sensorManager.registerListener(mINSFileLogger, Rotation,
               SensorManager.SENSOR_DELAY_GAME);
     }
   }
@@ -574,6 +576,7 @@ public class MainActivity extends AppCompatActivity
         RealTimePositionVelocityCalculator.RESIDUAL_MODE_DISABLED, null /* fixedGroundTruth */);
 
     mFileLogger = new FileLogger(getApplicationContext());
+    mINSFileLogger = new INSFileLogger(getApplicationContext());
     mAgnssUiLogger = new AgnssUiLogger();
     mGnssContainer =
         new GnssContainer(
@@ -612,11 +615,12 @@ public class MainActivity extends AppCompatActivity
     mFragments[FRAGMENT_INDEX_PLOT] = plotFragment;
     mRealTimePositionVelocityCalculator.setPlotFragment(plotFragment);
 
-    INSFragment incFragment = new INSFragment();
+    INSFragment insFragment = new INSFragment();
     //FragmentINC.setGpsContainer(mGnssContainer);
     //settingsFragment.setRealTimePositionVelocityCalculator(mRealTimePositionVelocityCalculator);
     //settingsFragment.setAutoModeSwitcher(this);
-    mFragments[FRAGMENT_INDEX_INC] = incFragment;
+    insFragment.setFileLogger(mINSFileLogger);
+    mFragments[FRAGMENT_INDEX_INC] = insFragment;
     RelativeNavigationFragment rnFragment = new RelativeNavigationFragment();
     //FragmentINC.setGpsContainer(mGnssContainer);
     //settingsFragment.setRealTimePositionVelocityCalculator(mRealTimePositionVelocityCalculator);

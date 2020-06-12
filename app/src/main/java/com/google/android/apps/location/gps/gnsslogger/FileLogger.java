@@ -73,7 +73,6 @@ public class FileLogger implements GnssListener, SensorEventListener {
   private File mFile;
 
   private UIFragmentComponent mUiComponent;
-  private INSFragment.UiINSResults mUiComponents;
 
   public synchronized UIFragmentComponent getUiComponent() {
     return mUiComponent;
@@ -81,9 +80,6 @@ public class FileLogger implements GnssListener, SensorEventListener {
 
   public synchronized void setUiComponent(UIFragmentComponent value) {
     mUiComponent = value;
-  }
-  public synchronized void setUiComponents(INSFragment.UiINSResults value) {
-    mUiComponents = value;
   }
 
   public FileLogger(Context context) {

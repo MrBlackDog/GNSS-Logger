@@ -27,17 +27,12 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.apps.location.gps.gnsslogger.FileLogger;
-import com.google.android.apps.location.gps.gnsslogger.LoggerFragment;
 import com.google.android.apps.location.gps.gnsslogger.R;
 import com.google.android.apps.location.gps.gnsslogger.SettingsFragment;
 import com.google.android.apps.location.gps.gnsslogger.TimerFragment;
 import com.google.android.apps.location.gps.gnsslogger.TimerService;
 import com.google.android.apps.location.gps.gnsslogger.TimerValues;
 import com.google.android.apps.location.gps.gnsslogger.UiLogger;
-
-import java.io.BufferedWriter;
-import java.io.File;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -55,7 +50,7 @@ public class INSFragment extends Fragment implements SensorEventListener {
     public static Sensor sensor;
     public static boolean Register;
     private TextView textView;
-    private final UiINSResults mUiComponent = new UiINSResults();
+    //private final UiINSResults mUiComponent = new UiINSResults();
     private ScrollView insScroll;
     private Button mStartLog;
     private Button mTimer;
@@ -64,8 +59,10 @@ public class INSFragment extends Fragment implements SensorEventListener {
     private TextView mLogView;
     private ScrollView mScrollView;
     private UiLogger mUiLogger;
-    private FileLogger mFileLogger;
+    private INSFileLogger mINSFileLogger;
+
     private final UiINSResults mUiComponents = new UiINSResults();
+
     private void launchTimerDialog() {
         TimerFragment timer = new TimerFragment();
         timer.setTargetFragment(this, 0);
@@ -81,8 +78,9 @@ public class INSFragment extends Fragment implements SensorEventListener {
         enableOptions(true /* start */);
         Toast.makeText(getContext(), R.string.stop_message, Toast.LENGTH_LONG).show();
         displayTimer(mTimerValues, false /* countdownStyle */);
-        mFileLogger.send();
+        mINSFileLogger.send();
     }
+
     private void enableOptions(boolean start) {
         mTimer.setEnabled(start);
         mStartLog.setEnabled(start);
@@ -121,7 +119,9 @@ public class INSFragment extends Fragment implements SensorEventListener {
     public INSFragment() {
         // Required empty public constructor
     }
-
+    public void setFileLogger(INSFileLogger value) {
+        mINSFileLogger = value;
+    }
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -179,19 +179,19 @@ public class INSFragment extends Fragment implements SensorEventListener {
     }
 
 
-    public void RegisterListener (boolean register)  {
+    public void RegisterListeners (boolean register)  {
         sensorManager = (SensorManager)  getActivity().getSystemService(Context.SENSOR_SERVICE);
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        Sensor magn = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        Sensor Rotation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        //Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        //Sensor magn = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        //Sensor Rotation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         if (register){
 
             if (accelerometer != null) {
                 sensorManager.registerListener(this, accelerometer,
                         SensorManager.SENSOR_DELAY_GAME);
             }
-            if (gyro != null) {
+            /*if (gyro != null) {
                 sensorManager.registerListener(this, gyro,
                         SensorManager.SENSOR_DELAY_GAME);
             }
@@ -203,13 +203,13 @@ public class INSFragment extends Fragment implements SensorEventListener {
             if (gyro != null) {
                 sensorManager.registerListener(this, Rotation,
                         SensorManager.SENSOR_DELAY_GAME);
-            }
+            }*/
         }
         else {
             sensorManager.unregisterListener(this, accelerometer);
-            sensorManager.unregisterListener(this,gyro);
-            sensorManager.unregisterListener(this, Rotation);
-            sensorManager.unregisterListener(this,magn);
+            //sensorManager.unregisterListener(this,gyro);
+            //sensorManager.unregisterListener(this, Rotation);
+            //sensorManager.unregisterListener(this,magn);
         }
     }
 
@@ -217,11 +217,11 @@ public class INSFragment extends Fragment implements SensorEventListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        RegisterListener(Register);
+        RegisterListeners(Register);
         View newView = inflater.inflate(R.layout.fragment_i_n_c, container, false /* attachToRoot */);
 
-            mLogView = (TextView) newView.findViewById(R.id.TextINS);
-            mScrollView = (ScrollView) newView.findViewById(R.id.INScroll);
+            textView = (TextView) newView.findViewById(R.id.TextINS);
+            insScroll = (ScrollView) newView.findViewById(R.id.INScroll);
 
             getActivity()
                     .bindService(
@@ -231,15 +231,18 @@ public class INSFragment extends Fragment implements SensorEventListener {
             if (currentUiLogger != null) {
                 currentUiLogger.setUiINSResults(mUiComponents);
             }
-            FileLogger currentFileLogger = mFileLogger;
+            INSFileLogger currentFileLogger = mINSFileLogger;
             if (currentFileLogger != null) {
-                currentFileLogger.setUiComponents(mUiComponents);
+                currentFileLogger.setUiComponent(mUiComponents);
             }
 
             Button start = (Button) newView.findViewById(R.id.start_logs);
             Button end = (Button) newView.findViewById(R.id.end_log);
             Button clear = (Button) newView.findViewById(R.id.clear_log);
-
+            mTimerDisplay = (TextView) newView.findViewById(R.id.ins_timer);
+            mTimer = (Button) newView.findViewById(R.id.start_timer);
+            mStartLog = (Button) newView.findViewById(R.id.start_log_ins);
+            mSendFile = (Button) newView.findViewById(R.id.send_log);
             start.setOnClickListener(
                     new View.OnClickListener() {
                         @Override
@@ -264,10 +267,7 @@ public class INSFragment extends Fragment implements SensorEventListener {
                         }
                     });
 
-            mTimerDisplay = (TextView) newView.findViewById(R.id.ins_timer);
-            mTimer = (Button) newView.findViewById(R.id.start_timer);
-            mStartLog = (Button) newView.findViewById(R.id.start_log_ins);
-            mSendFile = (Button) newView.findViewById(R.id.send_log);
+
 
             displayTimer(mTimerValues, false /* countdownStyle */);
             enableOptions(true /* start */);
@@ -278,7 +278,7 @@ public class INSFragment extends Fragment implements SensorEventListener {
                         public void onClick(View view) {
                             enableOptions(false /* start */);
                             Toast.makeText(getContext(), R.string.start_message, Toast.LENGTH_LONG).show();
-                            mFileLogger.startNewLog();
+                            mINSFileLogger.startNewLog();
 
                             if (!mTimerValues.isZero() && (mTimerService != null)) {
                                 mTimerService.startTimer();
@@ -314,28 +314,28 @@ public class INSFragment extends Fragment implements SensorEventListener {
             case Sensor.TYPE_ACCELEROMETER: {
                // textView.append( "ACC " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
                 //        + " " + String.valueOf(event.values[2])+"\n");
-                mUiComponent.logTextResults("ACC",SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                mUiComponents.logTextResults("ACC",SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
                         + " " + String.valueOf(event.values[2])+"\n", Color.BLACK);
                 break;
             }
             case Sensor.TYPE_GYROSCOPE:{
               //  textView.append("GYR " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
                        // + " " + String.valueOf(event.values[2])+"\n");
-                mUiComponent.logTextResults("GYR",SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                mUiComponents.logTextResults("GYR",SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
                          + " " + String.valueOf(event.values[2])+"\n", Color.BLACK);
                 break;
             }
             case Sensor.TYPE_MAGNETIC_FIELD:{
                // textView.append("MAG " + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
                //         + " " + String.valueOf(event.values[2])+"\n");
-                mUiComponent.logTextResults("MAG",SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                mUiComponents.logTextResults("MAG",SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
                                 + " " + String.valueOf(event.values[2])+"\n", Color.BLACK);
                 break;
             }
             case Sensor.TYPE_ROTATION_VECTOR:{
               //  textView.append("ROT" + SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
                     //    + " " + String.valueOf(event.values[2])  + " " + String.valueOf(event.values[3] )+"\n");
-                mUiComponent.logTextResults("ROT",SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
+                mUiComponents.logTextResults("ROT",SystemClock.elapsedRealtimeNanos() + " " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
                             + " " + String.valueOf(event.values[2])  + " " + String.valueOf(event.values[3] )+"\n", Color.BLACK);
                 break;
             }
