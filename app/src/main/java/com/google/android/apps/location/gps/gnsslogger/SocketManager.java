@@ -20,7 +20,15 @@ public class SocketManager {
 
         WebSocketGolos wsc = new WebSocketGolos();
         WebSocket ws = client.newWebSocket(request, wsc);
-        ws.send("State:" + "Client:"  + MainActivity.model);
+        /** Connection format:
+         * Phone:ID:Mode:Diff_Mode
+         *
+         * Phone - Identifier for connected device
+         * ID - Unique ID for device
+         * Mode: StandAlone or Relative at this time
+         * Relative_mode: Base or Target, none if Mode if StandAlone
+         */
+        ws.send("Phone:" + MainActivity.model + ":" + "Relative:" + "Base");
         return ws;
     }
 }

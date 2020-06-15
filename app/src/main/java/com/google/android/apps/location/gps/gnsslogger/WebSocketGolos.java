@@ -16,6 +16,11 @@ public class WebSocketGolos extends WebSocketListener {
         int Blue = Integer.parseInt(Message.split(",")[2]);
         return new Color(Red/255f,Green/255f,Blue/255f,1);
     }*/
+    public static MyCallBack getMeasurementsCallBack;
+
+    public interface  MyCallBack{
+        void callBackCall(String str);
+    }
 
     WebSocketGolos()
     {
@@ -27,6 +32,7 @@ public class WebSocketGolos extends WebSocketListener {
     @Override
     public void onMessage(WebSocket webSocket, String text)
     {
+
         String[] Mass = text.split(":");
         String Code = Mass[0];
 
@@ -34,7 +40,10 @@ public class WebSocketGolos extends WebSocketListener {
         if (Mass.length > 1) {
             Message = Mass[1].split(" ");
         }
-         loggerFragment.SetTextMessage("xd");
+        getMeasurementsCallBack.callBackCall(Mass[0]);
+        // loggerFragment.SetTextMessage("xd");
+        // вызываем метод обратного вызова
+
        // String Guid;
        // Color color;
        /* switch (Code){
@@ -135,4 +144,6 @@ public class WebSocketGolos extends WebSocketListener {
                 break;
         }*/
     }
+
 }
+

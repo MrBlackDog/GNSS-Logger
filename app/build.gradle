@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId "com.google.android.apps.location.gps.gnsslogger"
         minSdkVersion 24
-        targetSdkVersion 25
+        targetSdkVersion 26
         versionCode 1
         versionName "2.0.0.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -19,8 +19,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     dexOptions {
         preDexLibraries = false
@@ -36,13 +36,13 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
-    compile 'com.android.support:appcompat-v7:26.+'
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:design:26.+'
-    compile 'com.android.support:support-v13:26.+'
+    implementation 'com.android.support:appcompat-v7:26.+'
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:design:26.+'
+    implementation 'com.android.support:support-v13:26.+'
     compile 'com.google.android.gms:play-services-location:11.0.2'
-    compile 'com.google.android.gms:play-services-maps:11.0.2'
-    compile project(':pseudorange')
+    implementation 'com.google.android.gms:play-services-maps:11.0.2'
+    implementation project(':pseudorange')
     compile files('libs/achartengine-1.2.0.jar')
 }
 
