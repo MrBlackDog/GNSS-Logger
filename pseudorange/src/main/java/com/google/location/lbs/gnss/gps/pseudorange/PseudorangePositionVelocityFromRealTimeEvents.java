@@ -88,6 +88,9 @@ public class PseudorangePositionVelocityFromRealTimeEvents {
   private int mGpsWeekNumber = 0;
   private long mArrivalTimeSinceGpsEpochNs = 0;
 
+  /**состояние смартфона*/
+  private String state = "Base";
+
   /**
    * Computes Weighted least square position and velocity solutions from a received {@link
    * GnssMeasurementsEvent} and store the result in {@link
@@ -145,6 +148,7 @@ public class PseudorangePositionVelocityFromRealTimeEvents {
                 measurement.getAccumulatedDeltaRangeUncertaintyMeters(),
                 measurement.getPseudorangeRateUncertaintyMetersPerSecond());
         mUsefulSatellitesToReceiverMeasurements[measurement.getSvid() - 1] = gpsReceiverMeasurement;
+
       }
     }
 

@@ -9,6 +9,7 @@ import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.support.v4.BuildConfig;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
@@ -48,7 +49,7 @@ public class INSFileLogger implements SensorEventListener {
     private final Object mFileLock = new Object();
     private BufferedWriter mFileWriter;
     private File mFile;
-
+    SensorEvent event;
    // private LoggerFragment.UIFragmentComponent mUiComponent;
 
     private INSFragment.UiINSResults mUiComponent;
@@ -191,12 +192,29 @@ public class INSFileLogger implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER: {
                 String ACCStream =
-                        String.format("%s%s%s%s", "ACC ", System.nanoTime() + " ", String.valueOf(event.values[0]) + ' ', String.valueOf(event.values[1])
+                        String.format("%s%s%s%s", "ACC ", SystemClock.elapsedRealtimeNanos() + " ", String.valueOf(event.values[0]) + " ", String.valueOf(event.values[1])
                                 + ' ' + String.valueOf(event.values[2]));
-                synchronized (mFileLock) {
+
+                new Thread(() -> {
+                    //do time consuming operations
+                    //synchronized (mFileLock) {
+                        if (mFileWriter == null) {
+                            return;
+                        }
+                        try {
+                            mFileWriter.write(ACCStream);
+                            mFileWriter.newLine();
+                        } catch (IOException e) {
+                            logException(ERROR_WRITING_FILE, e);
+                        }
+                  //  }
+                }
+            ).start();
+               /* synchronized (mFileLock) {
                     if (mFileWriter == null) {
                         return;
                     }
@@ -206,7 +224,7 @@ public class INSFileLogger implements SensorEventListener {
                     } catch (IOException e) {
                         logException(ERROR_WRITING_FILE, e);
                     }
-                }
+                }*/
                 break;
             }
             case Sensor.TYPE_GYROSCOPE: {
@@ -215,7 +233,7 @@ public class INSFileLogger implements SensorEventListener {
                         return;
                     }
                     String GYRStream =
-                            String.format("%s%s%s%s", "GYR ", System.nanoTime() + " ", String.valueOf(event.values[0]) + ' ', String.valueOf(event.values[1])
+                            String.format("%s%s%s%s", "GYR ", SystemClock.elapsedRealtimeNanos() + " ", String.valueOf(event.values[0]) + ' ', String.valueOf(event.values[1])
                                     + ' ' + String.valueOf(event.values[2]));
                     /*try {
                         mFileWriter.write(GYRStream);

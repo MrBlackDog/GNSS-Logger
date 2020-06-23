@@ -217,7 +217,7 @@ public class INSFragment extends Fragment implements SensorEventListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        RegisterListeners(Register);
+        //RegisterListeners(Register);
         View newView = inflater.inflate(R.layout.fragment_i_n_c, container, false /* attachToRoot */);
 
             textView = (TextView) newView.findViewById(R.id.TextINS);
@@ -314,8 +314,11 @@ public class INSFragment extends Fragment implements SensorEventListener {
             case Sensor.TYPE_ACCELEROMETER: {
                // textView.append( "ACC " + SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
                 //        + " " + String.valueOf(event.values[2])+"\n");
-                mUiComponents.logTextResults("ACC",SystemClock.elapsedRealtimeNanos() +" " + String.valueOf(event.values[0]) + " " + String.valueOf(event.values[1])
-                        + " " + String.valueOf(event.values[2])+"\n", Color.BLACK);
+                mUiComponents.logTextResults("ACC",SystemClock.elapsedRealtimeNanos() +"\n"
+                        + String.valueOf(event.values[0]) + "\n"
+                        + String.valueOf(event.values[1]) + "\n"
+                        + String.valueOf(event.values[2]) + "\n"
+                        , Color.BLACK);
                 break;
             }
             case Sensor.TYPE_GYROSCOPE:{

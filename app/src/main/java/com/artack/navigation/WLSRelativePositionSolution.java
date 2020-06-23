@@ -41,8 +41,8 @@ public class WLSRelativePositionSolution {
         }
 
         int k = 1;
-        while ((Math.abs(Xk.getEntry(1,1) - X0.getEntry(1,1))<Epsilon) &&
-                (Math.abs(Xk.getEntry(2,1) - X0.getEntry(2,1))<Epsilon) ||
+        while (((Math.abs(Xk.getEntry(1,1) - X0.getEntry(1,1))<Epsilon) &&
+                (Math.abs(Xk.getEntry(2,1) - X0.getEntry(2,1))<Epsilon)) ||
                 (k<MaxIterationsCount))
         {
             k++;
