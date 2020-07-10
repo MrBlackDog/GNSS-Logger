@@ -18,9 +18,15 @@ public class WLSRelativePositionSolution {
     private RealMatrix Xref = new Array2DRowRealMatrix(3,1);
     private RealMatrix SatPosENU = new Array2DRowRealMatrix(3,1);
     /** Iterative WLS method for relative navigation solution*/
-    public double ComputeRangeDifferences (double PseudoRangeBase,double PseudoRangeTarget)
+    public RealMatrix ComputeRangeDifferences (RealMatrix PseudoRangeBase,RealMatrix PseudoRangeTarget)
     {
-        return 0;
+        int rowCount = PseudoRangeTarget.getRowDimension();
+        RealMatrix RD = new Array2DRowRealMatrix(rowCount,1);
+        for(int i=0;i<rowCount;i++)
+        {
+            RD.setEntry(i,1,PseudoRangeBase.getEntry(i,1)-PseudoRangeTarget.getEntry(i,1));
+        }
+        return RD;
     }
 
     public RealMatrix WLSSolution(RealMatrix RD, RealMatrix SatPosECEF,RealMatrix ref)
@@ -59,9 +65,12 @@ public class WLSRelativePositionSolution {
         for(int i=0;i<X.getRowDimension();i++)
         {
             F.setEntry(i,1,
-                    X0.getEntry(1,1) + (X.getEntry(1,i)-Xref.getEntry(1,1))/CalcNorm(X.getColumnMatrix(i).subtract(Xref))+
-                       X0.getEntry(2,1) + (X.getEntry(2,i)-Xref.getEntry(2,1))/CalcNorm(X.getColumnMatrix(i).subtract(Xref))+
-                       X0.getEntry(3,1) + (X.getEntry(3,i)-Xref.getEntry(3,1))/CalcNorm(X.getColumnMatrix(i).subtract(Xref)));
+                    X0.getEntry(1,1) + (X.getEntry(1,i)-Xref.getEntry(1,1))/
+                            CalcNorm(X.getColumnMatrix(i).subtract(Xref))+
+                       X0.getEntry(2,1) + (X.getEntry(2,i)-Xref.getEntry(2,1))/
+                            CalcNorm(X.getColumnMatrix(i).subtract(Xref))+
+                       X0.getEntry(3,1) + (X.getEntry(3,i)-Xref.getEntry(3,1))/
+                            CalcNorm(X.getColumnMatrix(i).subtract(Xref)));
         }
         return F;
     }
