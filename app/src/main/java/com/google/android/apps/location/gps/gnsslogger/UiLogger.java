@@ -32,6 +32,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+
+import com.artack.navigation.INSFragment;
 import com.google.android.apps.location.gps.gnsslogger.LoggerFragment.UIFragmentComponent;
 
 import java.io.IOException;
@@ -76,13 +78,17 @@ public class UiLogger implements GnssListener
   }
 
   private UIFragmentComponent mUiFragmentComponent;
+  private INSFragment.UiINSResults mUiINSResults;
 
   public synchronized UIFragmentComponent getUiFragmentComponent() {
     return mUiFragmentComponent;
   }
 
   public synchronized void setUiFragmentComponent(UIFragmentComponent value) {
-    mUiFragmentComponent = value;
+  mUiFragmentComponent = value;
+}
+  public synchronized void setUiINSResults(INSFragment.UiINSResults value) {
+    mUiINSResults = value;
   }
 
   @Override

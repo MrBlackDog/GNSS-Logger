@@ -52,7 +52,7 @@ public class TimerService extends Service {
 
   /** A {@link Binder} that exposes a {@link TimerService}. */
   public class TimerBinder extends Binder {
-    TimerService getService() {
+    public TimerService getService() {
       return TimerService.this;
     }
   }
@@ -103,14 +103,14 @@ public class TimerService extends Service {
     }
   }
 
-  void startTimer() {
+  public void startTimer() {
     if ((mCountDownTimer != null) && !mTimerStarted) {
       mCountDownTimer.start();
       mTimerStarted = true;
     }
   }
 
-  void stopTimer() {
+  public void stopTimer() {
     if (mCountDownTimer != null) {
       mCountDownTimer.cancel();
       mTimerStarted = false;

@@ -1,5 +1,9 @@
 package com.google.android.apps.location.gps.gnsslogger;
 
+import com.artack.navigation.SatteliteMeasurement;
+import com.google.location.lbs.gnss.gps.pseudorange.GpsMeasurement;
+import com.google.location.lbs.gnss.gps.pseudorange.GpsNavigationMessageStore;
+
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
@@ -17,9 +21,10 @@ public class WebSocketGolos extends WebSocketListener {
         return new Color(Red/255f,Green/255f,Blue/255f,1);
     }*/
     public static MyCallBack getMeasurementsCallBack;
+    private SatteliteMeasurement[] satteliteMeasurements = new SatteliteMeasurement[GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES];
 
     public interface  MyCallBack{
-        void callBackCall(String str);
+        void callBackCall(String ToW,String WeekNumber,SatteliteMeasurement[] gpsMeasurement);
     }
 
     WebSocketGolos()
@@ -40,10 +45,16 @@ public class WebSocketGolos extends WebSocketListener {
         if (Mass.length > 1) {
             Message = Mass[1].split(" ");
         }
-        getMeasurementsCallBack.callBackCall(Mass[0]);
+        //надо продумать формат сообщения
+        String ToW ="";
+        String WeekNumber ="";
+        for(int i=0;i<Message.length;i+=2) {
+            satteliteMeasurements[Integer.parseInt(Message[i])-1] = new SatteliteMeasurement(Integer.parseInt(Message[i]),
+                    Double.parseDouble(Message[i+1]));
+        }
+        getMeasurementsCallBack.callBackCall(ToW,WeekNumber,satteliteMeasurements);
         // loggerFragment.SetTextMessage("xd");
         // вызываем метод обратного вызова
-
        // String Guid;
        // Color color;
        /* switch (Code){

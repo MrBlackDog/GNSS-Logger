@@ -20,6 +20,7 @@ import com.google.android.apps.location.gps.gnsslogger.ResultFragment;
 import com.google.android.apps.location.gps.gnsslogger.WebSocketGolos;
 import com.google.location.lbs.gnss.gps.pseudorange.Ecef2LlaConverter;
 import com.google.location.lbs.gnss.gps.pseudorange.GpsMathOperations;
+import com.google.location.lbs.gnss.gps.pseudorange.GpsMeasurement;
 import com.google.location.lbs.gnss.gps.pseudorange.GpsNavigationMessageStore;
 import com.google.location.lbs.gnss.gps.pseudorange.GpsTime;
 import com.google.location.lbs.gnss.gps.pseudorange.Lla2EcefConverter;
@@ -41,7 +42,7 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
     private Handler mRelativePositionVelocityCalculationHandler;
     // класс для расчета дальностей и прочего
     private PseudorangeRelativePositionVelocityFromRealTimeEvents mPseudorangeRelativePositionVelocityFromRealTimeEvents;
-    public GnssMeasurement targetMeasurement;
+    public SatteliteMeasurement[] targetMeasurement;
     double[] positionSolutionECEF;
     private String Xd;
     private String state = "Base";
@@ -77,7 +78,7 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
         mRelativePositionVelocityCalculationHandler.post(r);
     }
 
-    /** Sets a rough location of the receiver that can be used to request SUPL assistance data */
+   /* /** Sets a rough location of the receiver that can be used to request SUPL assistance data
     public void setReferencePosition(double lat, double lng, double alt) {
         if (mReferenceLocation == null) {
             mReferenceLocation = new double[3];
@@ -92,7 +93,7 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
         Log.e("RefLocation:",String.valueOf(mReferenceLocationECEF[0]) +" " +
                 String.valueOf(mReferenceLocationECEF[1])+ " " +
                 String.valueOf(mReferenceLocationECEF[2]));
-    }
+    }*/
 
     @Override
     public void onProviderEnabled(String provider) {
@@ -126,13 +127,13 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
 
             mRelativePositionVelocityCalculationHandler.post(r);
         }
-        if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
+     /*   if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
             if (mReferenceLocationECEF == null)
                 setReferencePosition(
                         (int) (location.getLatitude() * 1E7),
                         (int) (location.getLongitude() * 1E7),
                         (int) (location.getAltitude() * 1E7));
-        }
+        }*/
     }
 
     @Override
@@ -301,11 +302,14 @@ public class RealTimeRelativePositionCalculator implements GnssListener {
 
     }
 
-    public void setTargetMeasurement(String string) {
-
-        this.Xd = string;
-        Log.d("CallBack",Xd);
+    public void setTargetMeasurement(SatteliteMeasurement[] targetMeasurement) {
+        this.targetMeasurement = targetMeasurement;
+        Log.d("CallBack","XD");
         //this.targetMeasurement = targetMeasurement;
+    }
+
+    public SatteliteMeasurement[] getTargetMeasurement() {
+        return targetMeasurement;
     }
 
     @Override

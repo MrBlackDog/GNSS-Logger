@@ -37,6 +37,8 @@ import android.support.v4.BuildConfig;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.artack.navigation.INSFragment;
 import com.google.android.apps.location.gps.gnsslogger.LoggerFragment.UIFragmentComponent;
 import java.io.BufferedWriter;
 import java.io.File;
